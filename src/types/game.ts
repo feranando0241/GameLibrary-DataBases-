@@ -1,5 +1,5 @@
 export type ViewMode = 'grid' | 'list' | 'detail';
-export type FilterCategory = 'all' | 'favorites';
+export type FilterCategory = 'all' | 'my-games' | 'favorites';
 export type UserTrackingStatus = 'CURRENT' | 'PLANNING' | 'COMPLETED' | 'PAUSED' | 'DROPPED';
 export type GameFormat = 'PC' | 'PlayStation 5' | 'Xbox Series X' | 'Nintendo Switch' | 'Steam Deck';
 

@@ -71,7 +71,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Filter Selectors Layer */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
         {/* Genre Selector */}
         <div>
           <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
@@ -129,22 +129,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </select>
         </div>
 
-        {/* Status Selector */}
-        <div>
-          <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
-            Install Status
-          </label>
-          <select
-            value={filters.status}
-            onChange={(e) => updateField('status', e.target.value)}
-            className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] text-xs font-medium rounded-xl px-3 py-2 border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-2 focus:ring-[#00FFD1] cursor-pointer"
-          >
-            <option value="">All Statuses</option>
-            <option value="INSTALLED" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Installed on NVMe</option>
-            <option value="CLOUD" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Cloud Library</option>
-          </select>
-        </div>
-
         {/* Sort Selector */}
         <div>
           <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
@@ -158,7 +142,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <option value="SCORE_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Top Rated (Score)</option>
             <option value="HOURS_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Hours Played</option>
             <option value="POPULARITY_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Most Popular</option>
-            <option value="STORAGE_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Disk Size (GB)</option>
             <option value="TITLE_ASC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Title (A-Z)</option>
             <option value="YEAR_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Release Date</option>
           </select>

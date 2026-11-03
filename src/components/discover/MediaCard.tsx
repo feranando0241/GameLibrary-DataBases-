@@ -74,19 +74,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           </div>
         )}
 
-        {/* Floating Game Status Bar at Bottom */}
-        <div className="absolute bottom-0 inset-x-0 bg-[#0B141E]/90 dark:bg-[#0B141E]/90 light:bg-black/80 backdrop-blur-sm px-2.5 py-1.5 flex items-center justify-between text-[11px] font-mono border-t border-white/10 text-white">
-          {game.isInstalled ? (
-            <span className="flex items-center gap-1.5 font-sans font-bold text-[#00FFD1]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#00FFD1] animate-pulse shadow-[0_0_8px_#00FFD1]" />
-              Installed
-            </span>
-          ) : (
-            <span className="text-[#8BA0B2]">Cloud Title</span>
-          )}
-          <span className="text-[#F1F5F9] font-medium">{game.storageGb} GB</span>
-        </div>
-
         {/* Quick Track (+) Button on Hover */}
         {onOpenTrack && (
           <button
@@ -95,7 +82,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               onOpenTrack(e, game);
             }}
             title="Track Game"
-            className="absolute bottom-10 right-3 w-8 h-8 rounded-full bg-[#00FFD1] text-[#0B141E] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-[0_0_15px_rgba(0,255,209,0.7)] hover:scale-110 active:scale-95 z-20 font-bold"
+            className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-[#00FFD1] text-[#0B141E] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-[0_0_15px_rgba(0,255,209,0.7)] hover:scale-110 active:scale-95 z-20 font-bold"
           >
             {trackingStatus ? <Check className="w-4 h-4 stroke-[3]" /> : <Plus className="w-4 h-4 stroke-[3]" />}
           </button>

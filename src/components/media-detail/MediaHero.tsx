@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ArrowLeft,
-  Play,
-  Download,
   Star,
   Clock,
-  HardDrive,
+  TrendingUp,
   Sparkles,
   BookmarkPlus,
   Check,
@@ -19,7 +17,6 @@ interface MediaHeroProps {
   onBack: () => void;
   onOpenTrack: () => void;
   currentTrack?: UserTrackEntry;
-  onToggleInstall?: () => void;
 }
 
 export const MediaHero: React.FC<MediaHeroProps> = ({
@@ -27,15 +24,7 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
   onBack,
   onOpenTrack,
   currentTrack,
-  onToggleInstall,
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const handlePlay = () => {
-    setIsPlaying(true);
-    setTimeout(() => setIsPlaying(false), 3000);
-  };
-
   const achievementPercentage = Math.round(
     (game.achievements.unlocked / Math.max(1, game.achievements.total)) * 100
   );
@@ -94,24 +83,6 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
               >
                 {currentTrack ? `Tracked (${currentTrack.status})` : 'Track Game Progress'}
               </Button>
-
-              {onToggleInstall && (
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={game.isInstalled ? handlePlay : onToggleInstall}
-                  leftIcon={
-                    game.isInstalled ? (
-                      <Play className="w-4 h-4 fill-current text-[#00FFD1]" />
-                    ) : (
-                      <Download className="w-4 h-4 text-[#00FFD1]" />
-                    )
-                  }
-                  className="w-full font-bold text-xs uppercase tracking-wider bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] hover:border-[#00FFD1]"
-                >
-                  {game.isInstalled ? (isPlaying ? 'Launching...' : 'Play Now') : `Install (${game.storageGb} GB)`}
-                </Button>
-              )}
             </div>
           </div>
 
@@ -121,9 +92,6 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-[#00FFD1]/15 text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] border border-[#00FFD1]/30">
                   {game.format}
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#131F2E] dark:bg-[#131F2E] light:bg-white text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
-                  {game.isInstalled ? 'Installed on NVMe' : 'Cloud Library'}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
                   {game.releaseYear}
@@ -160,10 +128,10 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
 
               <div className="p-3.5 rounded-2xl bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] flex items-center gap-1">
-                  <HardDrive className="w-3.5 h-3.5 text-[#00FFD1]" /> Disk Size
+                  <TrendingUp className="w-3.5 h-3.5 text-[#00FFD1]" /> Popularity
                 </span>
                 <span className="text-lg font-bold font-mono text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] mt-1 block">
-                  {game.storageGb} GB
+                  #{game.popularity.toLocaleString()}
                 </span>
               </div>
 

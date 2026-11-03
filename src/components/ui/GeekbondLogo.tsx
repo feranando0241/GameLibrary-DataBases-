@@ -20,17 +20,16 @@ export const GeekbondLogo: React.FC<GeekbondLogoProps> = ({
   return (
     <div className={`flex flex-col select-none ${className}`}>
       <span
-        className={`font-display font-black text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] leading-tight transition-colors hover:text-[#00FFD1] dark:hover:text-[#00FFD1] light:hover:text-[#00897B] ${sizeClasses[size]}`}
+        className={`font-display font-black text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] leading-tight transition-colors hover:text-[#00FFD1] dark:hover:text-[#00FFD1] light:hover:text-[#00897B] tracking-wider ${sizeClasses[size]}`}
         style={{
-          fontFamily: '"Bodoni Moda", Didot, "Bodoni MT", serif',
-          fontOpticalSizing: 'auto',
+          fontFamily: '"Orbitron", sans-serif',
           fontWeight: 900,
         }}
       >
         GEEKBOND
       </span>
       {showSubtitle && (
-        <span className="text-[10px] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-widest font-medium -mt-0.5">
+        <span className="text-[10px] text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] uppercase tracking-[0.25em] font-mono font-bold -mt-0.5">
           Game Library
         </span>
       )}

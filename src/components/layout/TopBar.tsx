@@ -4,8 +4,6 @@ import {
   Search,
   Download,
   Settings,
-  Sun,
-  Moon,
   X,
   ChevronDown,
   HardDrive,
@@ -18,16 +16,12 @@ import { GeekbondLogo } from '../ui/GeekbondLogo';
 interface TopBarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  isDarkMode: boolean;
-  toggleDarkMode: () => void;
   totalGamesCount: number;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
   searchQuery,
   setSearchQuery,
-  isDarkMode,
-  toggleDarkMode,
   totalGamesCount,
 }) => {
   const [showDownloads, setShowDownloads] = useState(false);
@@ -139,20 +133,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           )}
         </div>
-
-        {/* Theme Toggle Button: Light / Dark Mode */}
-        <button
-          onClick={toggleDarkMode}
-          className="p-2 rounded-xl text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1] hover:bg-[#1A2A3D] dark:hover:bg-[#1A2A3D] light:hover:bg-[#E2E8F0] border border-transparent transition-all outline-none focus:ring-2 focus:ring-[#00FFD1]"
-          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          id="theme-toggle-btn"
-        >
-          {isDarkMode ? (
-            <Sun className="w-5 h-5 text-amber-300 hover:rotate-45 transition-transform" />
-          ) : (
-            <Moon className="w-5 h-5 text-indigo-600 hover:-rotate-12 transition-transform" />
-          )}
-        </button>
 
         {/* User Profile */}
         <div className="relative">

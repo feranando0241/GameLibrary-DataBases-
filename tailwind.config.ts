@@ -6,8 +6,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Bodoni Moda"', 'Didot', '"Bodoni MT"', 'serif'],
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Orbitron"', '"Rajdhani"', 'sans-serif'],
+        gamer: ['"Orbitron"', 'sans-serif'],
+        sans: ['"Rajdhani"', '"Chakra Petch"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {

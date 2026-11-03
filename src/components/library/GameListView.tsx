@@ -1,21 +1,17 @@
 import React from 'react';
 import {
-  Play,
-  Download,
   Heart,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
 } from 'lucide-react';
 import type { Game, SortField, SortDirection } from '../../types/game';
-import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
 interface GameListViewProps {
   games: Game[];
   onSelectGame: (game: Game) => void;
   onToggleFavorite: (e: React.MouseEvent, gameId: string) => void;
-  onToggleInstall: (e: React.MouseEvent, gameId: string) => void;
   sortField: SortField;
   sortDirection: SortDirection;
   onSortChange: (field: SortField) => void;
@@ -25,7 +21,6 @@ export const GameListView: React.FC<GameListViewProps> = ({
   games,
   onSelectGame,
   onToggleFavorite,
-  onToggleInstall,
   sortField,
   sortDirection,
   onSortChange,
@@ -59,7 +54,7 @@ export const GameListView: React.FC<GameListViewProps> = ({
                 </div>
               </th>
               <th className="py-3.5 px-4">Score</th>
-              <th className="py-3.5 px-4">Status</th>
+              <th className="py-3.5 px-4">Platform</th>
               <th
                 onClick={() => onSortChange('hoursPlayed')}
                 className="py-3.5 px-4 cursor-pointer hover:text-[#00FFD1] transition-colors text-right"
@@ -70,15 +65,15 @@ export const GameListView: React.FC<GameListViewProps> = ({
                 </div>
               </th>
               <th
-                onClick={() => onSortChange('storageGb')}
+                onClick={() => onSortChange('popularity')}
                 className="py-3.5 px-4 cursor-pointer hover:text-[#00FFD1] transition-colors text-right"
               >
                 <div className="flex items-center justify-end">
-                  <span>Disk Size</span>
-                  {renderSortIndicator('storageGb')}
+                  <span>Popularity</span>
+                  {renderSortIndicator('popularity')}
                 </div>
               </th>
-              <th className="py-3.5 pr-4 pl-2 text-right">Actions</th>
+              <th className="py-3.5 pr-4 pl-2 text-right">Action</th>
             </tr>
           </thead>
 
@@ -134,11 +129,11 @@ export const GameListView: React.FC<GameListViewProps> = ({
                   </span>
                 </td>
 
-                {/* Install Status */}
+                {/* Platform Format */}
                 <td className="py-3 px-4 whitespace-nowrap">
-                  <Badge variant={game.isInstalled ? 'installed' : 'cloud'}>
-                    {game.isInstalled ? 'Installed' : 'Cloud Library'}
-                  </Badge>
+                  <span className="font-mono text-xs px-2 py-0.5 rounded bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#F1F5F9] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
+                    {game.format}
+                  </span>
                 </td>
 
                 {/* Hours Logged */}
@@ -152,12 +147,11 @@ export const GameListView: React.FC<GameListViewProps> = ({
                   )}
                 </td>
 
-                {/* Disk Size */}
+                {/* Popularity */}
                 <td className="py-3 px-4 text-right font-mono text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] whitespace-nowrap">
                   <span className="text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] font-medium">
-                    {game.storageGb.toFixed(1)}
-                  </span>{' '}
-                  GB
+                    #{game.popularity.toLocaleString()}
+                  </span>
                 </td>
 
                 {/* Actions */}
@@ -166,25 +160,13 @@ export const GameListView: React.FC<GameListViewProps> = ({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex items-center justify-end gap-2">
-                    {game.isInstalled ? (
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        leftIcon={<Play className="w-3.5 h-3.5 fill-[#0B141E]" />}
-                        onClick={(e) => onToggleInstall(e, game.id)}
-                      >
-                        Launch
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        leftIcon={<Download className="w-3.5 h-3.5 text-[#00FFD1]" />}
-                        onClick={(e) => onToggleInstall(e, game.id)}
-                      >
-                        Install
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => onSelectGame(game)}
+                    >
+                      View Details
+                    </Button>
                   </div>
                 </td>
               </tr>
