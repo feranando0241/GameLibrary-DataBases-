@@ -1,35 +1,48 @@
-import React, { useState } from 'react';
-import { X, Star, Check, Trash2, Clock } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  CheckIcon,
+  ClockIcon,
+  StarIcon,
+  TrashIcon,
+  XIcon,
+} from '@phosphor-icons/react';
 import type { Game, UserTrackEntry, UserTrackingStatus } from '../../types/game';
+import { STATUSES } from '../../lib/status';
 import { Button } from '../ui/Button';
 
 interface TrackingModalProps {
   game: Game;
-  isOpen: boolean;
   onClose: () => void;
   currentEntry?: UserTrackEntry;
   onSave: (entry: UserTrackEntry) => void;
   onDelete?: (gameId: string) => void;
 }
 
+const sectionLabel = 'block text-sm font-semibold text-ink mb-2';
+const stepper =
+  'w-9 h-9 rounded-lg bg-elevated text-ink font-bold hover:bg-accent hover:text-canvas transition-colors flex items-center justify-center';
+
+/** Native <dialog>: focus trap, Escape and top-layer backdrop come from the browser. */
 export const TrackingModal: React.FC<TrackingModalProps> = ({
   game,
-  isOpen,
   onClose,
   currentEntry,
   onSave,
   onDelete,
 }) => {
-  const [status, setStatus] = useState<UserTrackingStatus>(
-    currentEntry?.status || 'CURRENT'
-  );
+  const ref = useRef<HTMLDialogElement>(null);
+  const [status, setStatus] = useState<UserTrackingStatus>(currentEntry?.status || 'CURRENT');
   const [score, setScore] = useState<number>(currentEntry?.score ?? game.averageScore ?? 90);
   const [progress, setProgress] = useState<number>(
     currentEntry?.progress ?? (game.hoursPlayed ? Math.round(game.hoursPlayed) : 5)
   );
   const [notes, setNotes] = useState<string>(currentEntry?.notes || '');
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    const dialog = ref.current;
+    dialog?.showModal();
+    return () => dialog?.close();
+  }, []);
 
   const handleSave = () => {
     onSave({
@@ -43,36 +56,29 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
     onClose();
   };
 
-  const statusOptions: { value: UserTrackingStatus; label: string }[] = [
-    { value: 'CURRENT', label: 'Currently Playing' },
-    { value: 'PLANNING', label: 'Plan to Play' },
-    { value: 'COMPLETED', label: 'Completed' },
-    { value: 'PAUSED', label: 'On Hold' },
-    { value: 'DROPPED', label: 'Dropped' },
-  ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
-        className="relative w-full max-w-lg bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] rounded-3xl p-6 shadow-2xl space-y-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <dialog
+      ref={ref}
+      aria-labelledby="tracking-title"
+      onClose={onClose}
+      // Click on the backdrop (the dialog element itself, outside the inner panel) closes
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="w-[calc(100%-2rem)] max-w-lg p-0 bg-surface text-ink border border-line rounded-2xl shadow-2xl backdrop:bg-black/80 backdrop:backdrop-blur-sm"
+    >
+      <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
+        <div className="flex items-start justify-between pb-4 border-b border-line">
           <div className="flex items-center gap-3">
             <img
               src={game.coverUrl}
-              alt={game.title}
-              className="w-12 h-16 object-cover rounded-xl border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] shrink-0"
+              alt=""
+              className="w-12 h-16 object-cover rounded-xl border border-line shrink-0"
             />
             <div>
-              <span className="text-[10px] uppercase font-bold text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] tracking-wider">
-                Geekbond Game Tracker
-              </span>
-              <h3 className="font-bold text-base text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] line-clamp-1">
+              <h2 id="tracking-title" className="font-bold text-base text-ink line-clamp-1">
                 {game.title}
-              </h3>
-              <p className="text-xs text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B]">
+              </h2>
+              <p className="text-xs text-muted">
                 {game.developer} • {game.format}
               </p>
             </div>
@@ -80,85 +86,89 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-xl text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1] hover:bg-[#1A2A3D] dark:hover:bg-[#1A2A3D] light:hover:bg-[#E2E8F0] transition-colors"
+            aria-label="Close"
+            className="p-1.5 rounded-xl text-muted hover:text-ink hover:bg-elevated transition-colors"
           >
-            <X className="w-5 h-5" />
+            <XIcon className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Tracking Status Tabs */}
-        <div>
-          <label className="block text-xs font-bold uppercase text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] tracking-wider mb-2">
-            Play Status
-          </label>
+        {/* Play status: native radios = arrow-key navigation for free */}
+        <fieldset>
+          <legend className={sectionLabel}>Play Status</legend>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {statusOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setStatus(opt.value)}
-                className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all ${
-                  status === opt.value
-                    ? 'bg-[#00FFD1] text-[#0B141E] border-[#00FFD1] shadow-[0_0_15px_rgba(0,255,209,0.35)] font-bold'
-                    : 'bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] hover:text-[#00FFD1]'
-                }`}
+            {STATUSES.map((opt) => (
+              <label
+                key={opt.id}
+                className="flex items-center gap-2 py-2 px-3 rounded-xl text-sm font-semibold border cursor-pointer transition-colors bg-canvas text-muted border-line hover:text-ink has-[:checked]:bg-elevated has-[:checked]:text-ink has-[:checked]:border-accent has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent"
               >
+                <input
+                  type="radio"
+                  name="play-status"
+                  value={opt.id}
+                  checked={status === opt.id}
+                  onChange={() => setStatus(opt.id)}
+                  className="sr-only"
+                />
+                <opt.icon weight="fill" className={`w-3.5 h-3.5 ${opt.text}`} aria-hidden />
                 {opt.label}
-              </button>
+              </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
-        {/* Score & Hours Progress */}
+        {/* Score & Hours */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Score Slider */}
-          <div className="p-3.5 rounded-2xl bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
+          <div className="p-3.5 rounded-2xl bg-canvas border border-line">
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
-                <Star className="w-3.5 h-3.5 text-amber-400" /> Score Rating
-              </span>
-              <span className="font-mono font-bold text-sm text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B]">
-                {score} / 100
-              </span>
+              <label
+                htmlFor="track-score"
+                className="text-sm font-semibold text-ink flex items-center gap-1.5"
+              >
+                <StarIcon className="w-3.5 h-3.5" /> Your Score
+              </label>
+              <span className="font-mono font-bold text-sm text-ink">{score} / 100</span>
             </div>
             <input
+              id="track-score"
               type="range"
               min="0"
               max="100"
               step="1"
               value={score}
               onChange={(e) => setScore(Number(e.target.value))}
-              className="w-full accent-[#00FFD1] cursor-pointer"
+              className="w-full accent-accent cursor-pointer"
             />
           </div>
 
-          {/* Hours Counter */}
-          <div className="p-3.5 rounded-2xl bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#00FFD1]" /> Hours Played
-              </span>
-              <span className="font-mono text-xs text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B]">
-                Logged
-              </span>
-            </div>
+          <div className="p-3.5 rounded-2xl bg-canvas border border-line">
+            <label
+              htmlFor="track-hours"
+              className="text-sm mb-2 font-semibold text-ink flex items-center gap-1.5"
+            >
+              <ClockIcon className="w-3.5 h-3.5" /> Hours Played
+            </label>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setProgress((p) => Math.max(0, p - 1))}
-                className="w-8 h-8 rounded-lg bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] font-bold hover:bg-[#00FFD1] hover:text-[#0B141E] transition-colors flex items-center justify-center"
+                aria-label="Remove one hour"
+                className={stepper}
               >
-                -
+                −
               </button>
               <input
+                id="track-hours"
                 type="number"
                 min="0"
                 max="9999"
                 value={progress}
-                onChange={(e) => setProgress(Number(e.target.value))}
-                className="flex-1 text-center bg-[#131F2E] dark:bg-[#131F2E] light:bg-white text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] font-mono font-bold text-sm py-1.5 rounded-lg border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-1 focus:ring-[#00FFD1]"
+                onChange={(e) => setProgress(Math.max(0, Number(e.target.value)))}
+                className="min-w-0 flex-1 text-center bg-surface text-ink font-mono font-bold text-sm py-1.5 rounded-lg border border-line outline-none focus:ring-1 focus:ring-accent"
               />
               <button
                 onClick={() => setProgress((p) => p + 1)}
-                className="w-8 h-8 rounded-lg bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] font-bold hover:bg-[#00FFD1] hover:text-[#0B141E] transition-colors flex items-center justify-center"
+                aria-label="Add one hour"
+                className={stepper}
               >
                 +
               </button>
@@ -166,21 +176,21 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
           </div>
         </div>
 
-        {/* Review Notes */}
         <div>
-          <label className="block text-xs font-bold uppercase text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] tracking-wider mb-2">
-            Game Notes & Review
+          <label htmlFor="track-notes" className={sectionLabel}>
+            Notes
           </label>
           <textarea
+            id="track-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Write your game review, completion thoughts, or notes..."
-            rows={2}
-            className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] text-xs p-3 rounded-xl border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-2 focus:ring-[#00FFD1] placeholder-[#8BA0B2] dark:placeholder-[#8BA0B2] light:placeholder-[#64748B]"
+            placeholder="Where you are, what you thought of it…"
+            rows={3}
+            className="w-full bg-canvas text-ink text-sm p-3 rounded-xl border border-line outline-none focus:ring-2 focus:ring-accent placeholder-muted"
           />
         </div>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex items-center justify-between pt-2">
           {currentEntry && onDelete ? (
             <button
@@ -188,30 +198,29 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
                 onDelete(game.id);
                 onClose();
               }}
-              className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1.5 p-2"
+              className="text-sm text-rose-400 hover:text-rose-300 flex items-center gap-1.5 p-2 -ml-2"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Remove from List
+              <TrashIcon className="w-4 h-4" /> Stop Tracking
             </button>
           ) : (
             <div />
           )}
 
           <div className="flex items-center gap-2.5">
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="md" onClick={onClose}>
               Cancel
             </Button>
             <Button
               variant="primary"
               size="md"
               onClick={handleSave}
-              leftIcon={<Check className="w-4 h-4 text-[#0B141E]" />}
-              className="bg-[#00FFD1] text-[#0B141E] hover:bg-[#00E5BC] shadow-[0_0_20px_rgba(0,255,209,0.4)] font-bold"
+              leftIcon={<CheckIcon className="w-4 h-4" />}
             >
-              Save Game Entry
+              {currentEntry ? 'Save Changes' : 'Start Tracking'}
             </Button>
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 };

@@ -1,19 +1,30 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  LayoutGrid,
-  List as ListIcon,
-  Gamepad2,
-} from 'lucide-react';
-import type { Game, FilterCategory, UserTrackEntry, UserTrackingStatus } from './types/game';
+  GameControllerIcon,
+  ListIcon,
+  SquaresFourIcon,
+} from '@phosphor-icons/react';
+import type { Game, FilterCategory, SortField, UserTrackEntry, UserTrackingStatus } from './types/game';
+import { STATUS, STATUSES } from './lib/status';
 import { mockGames } from './data/mockGames';
 import { TopBar } from './components/layout/TopBar';
 import { Sidebar } from './components/layout/Sidebar';
 import { FilterBar } from './components/discover/FilterBar';
-import type { FilterBarState } from './components/discover/FilterBar';
+import { DEFAULT_FILTERS, type FilterBarState } from './lib/filters';
 import { MediaCard } from './components/discover/MediaCard';
 import { MediaHero } from './components/media-detail/MediaHero';
 import { TrackingModal } from './components/tracker/TrackingModal';
 import { GameListView } from './components/library/GameListView';
+import { PixelWaves } from './components/layout/PixelWaves';
+
+// FilterBar sort value ↔ list-view column
+const SORT_FIELD: Record<string, SortField> = {
+  SCORE_DESC: 'averageScore',
+  HOURS_DESC: 'hoursPlayed',
+  POPULARITY_DESC: 'popularity',
+  TITLE_ASC: 'title',
+  YEAR_DESC: 'releaseYear',
+};
 
 export const App: React.FC = () => {
   // Main Games State
@@ -88,27 +99,13 @@ export const App: React.FC = () => {
   });
 
   // Filter Bar State (Pure Video Games)
-  const [filterState, setFilterState] = useState<FilterBarState>({
-    search: '',
-    genre: '',
-    year: '',
-    platform: '',
-    status: '',
-    sort: 'SCORE_DESC',
-  });
+  const [filterState, setFilterState] = useState<FilterBarState>(DEFAULT_FILTERS);
 
   // View & Category State
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sidebarCategory, setSidebarCategory] = useState<FilterCategory>('all');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [activeTrackingFilter, setActiveTrackingFilter] = useState<UserTrackingStatus | null>(null);
-
-  // Ensure dark theme is active
-  useEffect(() => {
-    document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
-    localStorage.setItem('geekbond-theme', 'dark');
-  }, []);
 
   // Global Keyboard Shortcuts (Ctrl+K and Escape)
   useEffect(() => {
@@ -297,15 +294,6 @@ export const App: React.FC = () => {
     return counts;
   }, [userTracks]);
 
-  // My Games sub-list sections definition
-  const myGamesSections: { id: UserTrackingStatus; name: string; dotColor: string }[] = [
-    { id: 'CURRENT', name: 'Currently Playing', dotColor: 'bg-[#00FFD1] shadow-[0_0_8px_#00FFD1]' },
-    { id: 'COMPLETED', name: 'Completed', dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' },
-    { id: 'PAUSED', name: 'On Hold', dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' },
-    { id: 'PLANNING', name: 'Plan to Play', dotColor: 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]' },
-    { id: 'DROPPED', name: 'Dropped', dotColor: 'bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.5)]' },
-  ];
-
   // Genre Label Mapping
   const genreLabelMap: Record<string, string> = {
     Action: 'Action & Combat',
@@ -365,15 +353,16 @@ export const App: React.FC = () => {
   }, [games]);
 
   return (
-    <div className="min-h-screen bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F1F5F9] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] flex flex-col font-sans transition-colors selection:bg-[#00FFD1] selection:text-[#0B141E]">
+    <div className="min-h-screen text-ink flex flex-col font-sans selection:bg-accent selection:text-canvas">
+      {/* Decorative pixel ripples. No bg on this wrapper so the canvas shows through. */}
+      <PixelWaves />
       {/* TopBar with Geekbond Branding and Search */}
       <TopBar
         searchQuery={filterState.search}
         setSearchQuery={(q) => setFilterState((prev) => ({ ...prev, search: q }))}
-        totalGamesCount={games.length}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex">
         {/* Left Sidebar */}
         <Sidebar
           currentCategory={sidebarCategory}
@@ -397,7 +386,7 @@ export const App: React.FC = () => {
         />
 
         {/* Dynamic Viewport */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6">
           {selectedGame ? (
             /* Comprehensive Media Hub */
             <MediaHero
@@ -408,125 +397,113 @@ export const App: React.FC = () => {
             />
           ) : (
             <>
-              {/* Multi-faceted Filter Bar */}
-              <FilterBar
-                filters={filterState}
-                onChange={setFilterState}
-                availableGenres={availableGenres}
-              />
-
-              {/* Viewport Header */}
-              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-black tracking-tight text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A]">
+              {/* Page header: title + count, view toggle, then one compact filter row */}
+              <div className="mb-6 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-baseline gap-3 min-w-0">
+                    <h1 className="text-2xl font-black tracking-tight text-ink truncate">
                       {selectedGenre
-                        ? `${genreLabelMap[selectedGenre] || selectedGenre} Titles`
+                        ? genreLabelMap[selectedGenre] || selectedGenre
                         : sidebarCategory === 'my-games'
                         ? activeTrackingFilter
-                          ? `My Games — ${
-                              activeTrackingFilter === 'CURRENT'
-                                ? 'Playing'
-                                : activeTrackingFilter === 'COMPLETED'
-                                ? 'Completed'
-                                : activeTrackingFilter === 'PAUSED'
-                                ? 'On Hold'
-                                : activeTrackingFilter === 'PLANNING'
-                                ? 'Planning'
-                                : 'Dropped'
-                            }`
-                          : 'My Games Collection'
+                          ? `My Games — ${STATUS[activeTrackingFilter].label}`
+                          : 'My Games'
                         : sidebarCategory === 'favorites'
-                        ? 'Favorite Titles'
-                        : 'Game Library & Catalog'}
+                        ? 'Favorites'
+                        : activeTrackingFilter
+                        ? STATUS[activeTrackingFilter].label
+                        : 'All Games'}
                     </h1>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#131F2E] dark:bg-[#131F2E] light:bg-white text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] shadow-sm">
+                    <span className="shrink-0 text-sm font-mono text-muted">
                       {filteredAndSortedGames.length} games
                     </span>
                   </div>
 
-                  {/* Play Tracking Status Quick Filters */}
-                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                  {/* Grid / List View Toggle */}
+                  <div className="flex items-center bg-surface p-1 rounded-xl border border-line shrink-0">
                     <button
-                      onClick={() => setActiveTrackingFilter(null)}
-                      className={`text-xs px-3 py-1 rounded-xl font-bold transition-all ${
-                        activeTrackingFilter === null
-                          ? 'bg-[#00FFD1] text-[#0B141E] shadow-[0_0_15px_rgba(0,255,209,0.35)]'
-                          : 'bg-[#131F2E] dark:bg-[#131F2E] light:bg-white text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]'
+                      onClick={() => setViewMode('grid')}
+                      aria-label="Grid view"
+                      aria-pressed={viewMode === 'grid'}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        viewMode === 'grid' ? 'bg-accent text-canvas' : 'text-muted hover:text-ink'
                       }`}
                     >
-                      All Games
+                      <SquaresFourIcon className="w-4 h-4" />
                     </button>
-                    {(['CURRENT', 'PLANNING', 'COMPLETED', 'PAUSED', 'DROPPED'] as UserTrackingStatus[]).map(
-                      (st) => {
-                        const count = Object.values(userTracks).filter((t) => t.status === st).length;
-                        const labelMap: Record<UserTrackingStatus, string> = {
-                          CURRENT: 'Playing',
-                          PLANNING: 'Plan to Play',
-                          COMPLETED: 'Completed',
-                          PAUSED: 'On Hold',
-                          DROPPED: 'Dropped',
-                        };
-                        return (
-                          <button
-                            key={st}
-                            onClick={() =>
-                              setActiveTrackingFilter((prev) => (prev === st ? null : st))
-                            }
-                            className={`text-xs px-3 py-1 rounded-xl font-semibold flex items-center gap-1.5 transition-all ${
-                              activeTrackingFilter === st
-                                ? 'bg-[#00FFD1] text-[#0B141E] font-bold shadow-[0_0_15px_rgba(0,255,209,0.35)]'
-                                : 'bg-[#131F2E] dark:bg-[#131F2E] light:bg-white text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]'
-                            }`}
-                          >
-                            <span>{labelMap[st]}</span>
-                            <span className="font-mono text-[10px] opacity-75">({count})</span>
-                          </button>
-                        );
-                      }
-                    )}
+                    <button
+                      onClick={() => setViewMode('list')}
+                      aria-label="List view"
+                      aria-pressed={viewMode === 'list'}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        viewMode === 'list' ? 'bg-accent text-canvas' : 'text-muted hover:text-ink'
+                      }`}
+                    >
+                      <ListIcon className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
-                {/* Grid / List View Toggle */}
-                <div className="flex items-center bg-[#131F2E] dark:bg-[#131F2E] light:bg-white p-1 rounded-xl border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] self-start sm:self-auto shadow-sm">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      viewMode === 'grid'
-                        ? 'bg-[#00FFD1] text-[#0B141E] shadow-[0_0_12px_rgba(0,255,209,0.4)]'
-                        : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1]'
-                    }`}
-                    title="Grid View (Poster Wall)"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-lg transition-all ${
-                      viewMode === 'list'
-                        ? 'bg-[#00FFD1] text-[#0B141E] shadow-[0_0_12px_rgba(0,255,209,0.4)]'
-                        : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1]'
-                    }`}
-                    title="List View (Management Table)"
-                  >
-                    <ListIcon className="w-4 h-4" />
-                  </button>
+                {/* Mobile category switch (sidebar is hidden below md) */}
+                <div className="md:hidden flex gap-2 overflow-x-auto">
+                  {(
+                    [
+                      ['all', 'All Games'],
+                      ['my-games', 'My Games'],
+                      ['favorites', 'Favorites'],
+                    ] as [FilterCategory, string][]
+                  ).map(([cat, label]) => (
+                    <button
+                      key={cat}
+                      aria-pressed={sidebarCategory === cat}
+                      onClick={() => {
+                        setSidebarCategory(cat);
+                        setSelectedGenre(null);
+                        setActiveTrackingFilter(null);
+                      }}
+                      className={`shrink-0 text-sm px-3 py-1.5 rounded-xl ${
+                        sidebarCategory === cat
+                          ? 'bg-elevated text-accent font-semibold'
+                          : 'text-muted'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
+
+                <FilterBar
+                  filters={filterState}
+                  onChange={setFilterState}
+                  availableGenres={availableGenres}
+                  status={activeTrackingFilter}
+                  onStatusChange={setActiveTrackingFilter}
+                />
               </div>
 
               {/* Empty State */}
               {filteredAndSortedGames.length === 0 ? (
-                <div className="py-20 text-center flex flex-col items-center justify-center rounded-2xl bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] p-8 shadow-sm">
-                  <Gamepad2 className="w-12 h-12 text-[#00FFD1] mb-3" />
-                  <h3 className="text-base font-bold text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A]">
+                <div className="py-20 text-center flex flex-col items-center justify-center rounded-2xl bg-surface border border-line p-8">
+                  <GameControllerIcon className="w-12 h-12 text-accent mb-3" />
+                  <h3 className="text-base font-bold text-ink">
                     {sidebarCategory === 'my-games' ? 'No games tracked under this status' : 'No games match your filters'}
                   </h3>
-                  <p className="text-xs text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] mt-1 max-w-sm">
+                  <p className="text-sm text-muted mt-1 max-w-sm">
                     {sidebarCategory === 'my-games'
-                      ? 'Click the (+) button on any game in the catalog to add it to your personal library and change its status!'
-                      : 'Try clearing search criteria, selecting "All Genres", or resetting active filter chips.'}
+                      ? 'Use the + button on any game to start tracking it.'
+                      : 'Nothing matches the current search and filters.'}
                   </p>
+                  <button
+                    onClick={() => {
+                      setFilterState(DEFAULT_FILTERS);
+                      setSidebarCategory('all');
+                      setSelectedGenre(null);
+                      setActiveTrackingFilter(null);
+                    }}
+                    className="mt-4 text-sm px-4 py-2 rounded-xl font-semibold bg-accent text-canvas hover:bg-accent-hover"
+                  >
+                    Show All Games
+                  </button>
                 </div>
               ) : viewMode === 'list' ? (
                 /* Management Table View */
@@ -534,36 +511,27 @@ export const App: React.FC = () => {
                   games={filteredAndSortedGames}
                   onSelectGame={setSelectedGame}
                   onToggleFavorite={handleToggleFavorite}
-                  sortField="title"
-                  sortDirection="asc"
-                  onSortChange={() => {}}
+                  sortField={SORT_FIELD[filterState.sort] ?? 'averageScore'}
+                  sortDirection={filterState.sort === 'TITLE_ASC' ? 'asc' : 'desc'}
+                  onSortChange={(field) => {
+                    const sort = Object.keys(SORT_FIELD).find((k) => SORT_FIELD[k] === field);
+                    if (sort) setFilterState((prev) => ({ ...prev, sort }));
+                  }}
                 />
               ) : sidebarCategory === 'my-games' && activeTrackingFilter === null ? (
                 /* Divided Sub-lists by Status in My Games */
                 <div className="space-y-10">
-                  {myGamesSections.map((sec) => {
+                  {STATUSES.map((sec) => {
                     const secGames = filteredAndSortedGames.filter(
                       (g) => userTracks[g.id]?.status === sec.id
                     );
                     if (secGames.length === 0) return null;
                     return (
                       <section key={sec.id} className="space-y-4">
-                        <div className="flex items-center justify-between pb-2 border-b border-[#22354B]/60 dark:border-[#22354B]/60 light:border-[#CBD5E1]">
-                          <div className="flex items-center gap-2.5">
-                            <span className={`w-2.5 h-2.5 rounded-full ${sec.dotColor}`} />
-                            <h2 className="text-lg font-black font-display tracking-wide uppercase text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A]">
-                              {sec.name}
-                            </h2>
-                            <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-[#131F2E] dark:bg-[#131F2E] light:bg-white text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] font-bold border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
-                              {secGames.length}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => setActiveTrackingFilter(sec.id)}
-                            className="text-xs font-semibold text-[#8BA0B2] hover:text-[#00FFD1] transition-colors"
-                          >
-                            Focus View →
-                          </button>
+                        <div className="flex items-center gap-2.5">
+                          <sec.icon weight="fill" className={`w-5 h-5 ${sec.text}`} aria-hidden />
+                          <h2 className="text-lg font-semibold text-ink">{sec.label}</h2>
+                          <span className="text-sm font-mono text-muted">{secGames.length}</span>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-5">
                           {secGames.map((game) => (
@@ -601,7 +569,6 @@ export const App: React.FC = () => {
           {trackingTarget && (
             <TrackingModal
               game={trackingTarget}
-              isOpen={Boolean(trackingTarget)}
               onClose={() => setTrackingTarget(null)}
               currentEntry={userTracks[trackingTarget.id]}
               onSave={handleSaveTrack}

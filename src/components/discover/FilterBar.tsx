@@ -1,165 +1,115 @@
 import React from 'react';
-import { Search, X, RotateCcw } from 'lucide-react';
-
-export interface FilterBarState {
-  search: string;
-  genre: string;
-  year: string;
-  platform: string;
-  status: string;
-  sort: string;
-}
+import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react';
+import { DEFAULT_FILTERS, type FilterBarState } from '../../lib/filters';
+import { STATUSES } from '../../lib/status';
+import type { UserTrackingStatus } from '../../types/game';
 
 interface FilterBarProps {
   filters: FilterBarState;
   onChange: (filters: FilterBarState) => void;
   availableGenres: string[];
+  /** Status filter; only shown on small screens, where the sidebar (which owns it) is hidden */
+  status: UserTrackingStatus | null;
+  onStatusChange: (status: UserTrackingStatus | null) => void;
 }
 
+const select =
+  'shrink-0 bg-surface text-ink text-sm rounded-xl px-3 py-2 border border-line hover:border-muted/40 outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer';
+
+/** One compact row of filters under the page title. Each select names itself via its first option. */
 export const FilterBar: React.FC<FilterBarProps> = ({
   filters,
   onChange,
   availableGenres,
+  status,
+  onStatusChange,
 }) => {
-  const updateField = (field: keyof FilterBarState, value: any) => {
-    onChange({
-      ...filters,
-      [field]: value,
-    });
-  };
-
-  const handleReset = () => {
-    onChange({
-      search: '',
-      genre: '',
-      year: '',
-      platform: '',
-      status: '',
-      sort: 'SCORE_DESC',
-    });
-  };
+  const updateField = (field: keyof FilterBarState, value: string) =>
+    onChange({ ...filters, [field]: value });
 
   const hasActiveFilters =
-    filters.search ||
-    filters.genre ||
-    filters.year ||
-    filters.platform ||
-    filters.status ||
-    filters.sort !== 'SCORE_DESC';
+    filters.search || filters.genre || filters.year || filters.platform || filters.status;
 
   return (
-    <div className="w-full bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] rounded-2xl p-4 md:p-5 shadow-xl mb-6 transition-colors">
-      {/* Top Search Bar */}
-      <div className="relative w-full pb-4 border-b border-[#22354B]/60 dark:border-[#22354B]/60 light:border-[#E2E8F0]">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B]" />
-        <input
-          type="text"
-          placeholder="Search games by title, developer, publisher, or genre tags..."
-          value={filters.search}
-          onChange={(e) => updateField('search', e.target.value)}
-          className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F1F5F9] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] placeholder-[#8BA0B2] dark:placeholder-[#8BA0B2] light:placeholder-[#64748B] text-sm rounded-xl pl-10 pr-10 py-2.5 border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] transition-all outline-none focus:ring-2 focus:ring-[#00FFD1] focus:border-transparent"
-        />
-        {filters.search && (
-          <button
-            onClick={() => updateField('search', '')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#8BA0B2] hover:text-[#00FFD1]"
-            title="Clear search"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
+    // One scrollable row on phones, wraps from sm up
+    <div className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible">
+      <select
+        aria-label="Play status"
+        value={status ?? ''}
+        onChange={(e) => onStatusChange((e.target.value || null) as UserTrackingStatus | null)}
+        className={`${select} md:hidden`}
+      >
+        <option value="">All Statuses</option>
+        {STATUSES.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.label}
+          </option>
+        ))}
+      </select>
 
-      {/* Filter Selectors Layer */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
-        {/* Genre Selector */}
-        <div>
-          <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
-            Genre
-          </label>
-          <select
-            value={filters.genre}
-            onChange={(e) => updateField('genre', e.target.value)}
-            className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] text-xs font-medium rounded-xl px-3 py-2 border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-2 focus:ring-[#00FFD1] cursor-pointer"
-          >
-            <option value="">All Genres</option>
-            {availableGenres.map((g) => (
-              <option key={g} value={g} className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">
-                {g}
-              </option>
-            ))}
-          </select>
-        </div>
+      <select
+        aria-label="Genre"
+        value={filters.genre}
+        onChange={(e) => updateField('genre', e.target.value)}
+        className={select}
+      >
+        <option value="">All Genres</option>
+        {availableGenres.map((g) => (
+          <option key={g} value={g}>
+            {g}
+          </option>
+        ))}
+      </select>
 
-        {/* Year / Era Selector */}
-        <div>
-          <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
-            Release Year
-          </label>
-          <select
-            value={filters.year}
-            onChange={(e) => updateField('year', e.target.value)}
-            className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] text-xs font-medium rounded-xl px-3 py-2 border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-2 focus:ring-[#00FFD1] cursor-pointer"
-          >
-            <option value="">Any Year</option>
-            <option value="2025" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">2025 (Upcoming)</option>
-            <option value="2024" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">2024</option>
-            <option value="2023" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">2023</option>
-            <option value="2020s" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">2020s</option>
-            <option value="2010s" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">2010s & Older</option>
-          </select>
-        </div>
+      <select
+        aria-label="Release year"
+        value={filters.year}
+        onChange={(e) => updateField('year', e.target.value)}
+        className={select}
+      >
+        <option value="">Any Year</option>
+        <option value="2025">2025 (Upcoming)</option>
+        <option value="2024">2024</option>
+        <option value="2023">2023</option>
+        <option value="2020s">2020s</option>
+        <option value="2010s">2010s & Older</option>
+      </select>
 
-        {/* Platform Selector */}
-        <div>
-          <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
-            Platform
-          </label>
-          <select
-            value={filters.platform}
-            onChange={(e) => updateField('platform', e.target.value)}
-            className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] text-xs font-medium rounded-xl px-3 py-2 border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-2 focus:ring-[#00FFD1] cursor-pointer"
-          >
-            <option value="">All Platforms</option>
-            <option value="PC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">PC</option>
-            <option value="PlayStation 5" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">PlayStation 5</option>
-            <option value="Xbox Series X" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Xbox Series X</option>
-            <option value="Nintendo Switch" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Nintendo Switch</option>
-            <option value="Steam Deck" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Steam Deck</option>
-          </select>
-        </div>
+      <select
+        aria-label="Platform"
+        value={filters.platform}
+        onChange={(e) => updateField('platform', e.target.value)}
+        className={select}
+      >
+        <option value="">All Platforms</option>
+        <option value="PC">PC</option>
+        <option value="PlayStation 5">PlayStation 5</option>
+        <option value="Xbox Series X">Xbox Series X</option>
+        <option value="Nintendo Switch">Nintendo Switch</option>
+        <option value="Steam Deck">Steam Deck</option>
+      </select>
 
-        {/* Sort Selector */}
-        <div>
-          <label className="block text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider mb-1.5">
-            Sort By
-          </label>
-          <select
-            value={filters.sort}
-            onChange={(e) => updateField('sort', e.target.value)}
-            className="w-full bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#F8FAFC] text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] text-xs font-semibold rounded-xl px-3 py-2 border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] outline-none focus:ring-2 focus:ring-[#00FFD1] cursor-pointer"
-          >
-            <option value="SCORE_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Top Rated (Score)</option>
-            <option value="HOURS_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Hours Played</option>
-            <option value="POPULARITY_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Most Popular</option>
-            <option value="TITLE_ASC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Title (A-Z)</option>
-            <option value="YEAR_DESC" className="bg-[#131F2E] dark:bg-[#131F2E] light:bg-white">Release Date</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Clear Active Filters Pill */}
       {hasActiveFilters && (
-        <div className="mt-4 pt-3 border-t border-[#22354B]/50 dark:border-[#22354B]/50 light:border-[#E2E8F0] flex items-center justify-between text-xs">
-          <span className="text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B]">Active game filters applied</span>
-          <button
-            onClick={handleReset}
-            className="text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] font-bold hover:underline flex items-center gap-1.5"
-          >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset All Filters
-          </button>
-        </div>
+        <button
+          onClick={() => onChange({ ...DEFAULT_FILTERS, sort: filters.sort })}
+          className="shrink-0 flex items-center gap-1.5 px-2 py-2 text-sm text-muted hover:text-ink transition-colors"
+        >
+          <ArrowCounterClockwiseIcon className="w-4 h-4" /> Clear Filters
+        </button>
       )}
+
+      <select
+        aria-label="Sort by"
+        value={filters.sort}
+        onChange={(e) => updateField('sort', e.target.value)}
+        className={`${select} sm:ml-auto`}
+      >
+        <option value="SCORE_DESC">Top Rated</option>
+        <option value="HOURS_DESC">Most Played</option>
+        <option value="POPULARITY_DESC">Most Popular</option>
+        <option value="TITLE_ASC">Title A–Z</option>
+        <option value="YEAR_DESC">Newest</option>
+      </select>
     </div>
   );
 };

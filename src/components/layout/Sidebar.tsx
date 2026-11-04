@@ -1,27 +1,27 @@
 import React, { useState } from 'react';
 import {
-  Layers,
-  Heart,
-  Gamepad2,
-  FolderHeart,
-  Flame,
-  Sword,
-  Globe,
-  Crosshair,
-  Skull,
-  Repeat,
-  Crown,
-  Cpu,
-  Ghost,
-  Layers as LayersIcon,
-  Car,
-  BookOpen,
-  Compass,
-  Clock,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+  BookOpenIcon,
+  CaretDownIcon,
+  CaretUpIcon,
+  ClockIcon,
+  CompassIcon,
+  CpuIcon,
+  CrosshairIcon,
+  CrownIcon,
+  FireIcon,
+  GameControllerIcon,
+  GhostIcon,
+  GlobeHemisphereWestIcon,
+  HeartIcon,
+  MapTrifoldIcon,
+  RepeatIcon,
+  SkullIcon,
+  StackIcon,
+  SteeringWheelIcon,
+  SwordIcon,
+} from '@phosphor-icons/react';
 import type { FilterCategory, UserTrackingStatus } from '../../types/game';
+import { STATUSES } from '../../lib/status';
 
 interface SidebarProps {
   currentCategory: FilterCategory;
@@ -54,29 +54,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isSectionOpen, setIsSectionOpen] = useState(true);
   const [isMyGamesOpen, setIsMyGamesOpen] = useState(true);
 
-  const trackingStatuses: { id: UserTrackingStatus; name: string; dotColor: string }[] = [
-    { id: 'CURRENT', name: 'Playing', dotColor: 'bg-[#00FFD1] shadow-[0_0_8px_#00FFD1]' },
-    { id: 'COMPLETED', name: 'Completed', dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' },
-    { id: 'PAUSED', name: 'On Hold', dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]' },
-    { id: 'PLANNING', name: 'Planning', dotColor: 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]' },
-    { id: 'DROPPED', name: 'Dropped', dotColor: 'bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.5)]' },
-  ];
-
   const collections = [
-    { id: 'Action', name: 'Action & Combat', icon: Flame },
-    { id: 'RPG', name: 'RPGs & Fantasy', icon: Sword },
-    { id: 'Open World', name: 'Open World', icon: Globe },
-    { id: 'Shooter', name: 'Shooters & FPS', icon: Crosshair },
-    { id: 'Souls-like', name: 'Souls-like & Tough', icon: Skull },
-    { id: 'Roguelike', name: 'Roguelike & Dungeons', icon: Repeat },
-    { id: 'Strategy', name: 'Strategy & 4X', icon: Crown },
-    { id: 'Sci-Fi', name: 'Sci-Fi & Cyberpunk', icon: Cpu },
-    { id: 'Horror', name: 'Survival & Horror', icon: Ghost },
-    { id: 'Metroidvania', name: 'Metroidvania & Platformer', icon: LayersIcon },
-    { id: 'Racing', name: 'Racing & Driving', icon: Car },
-    { id: 'Story Rich', name: 'Story Rich Narrative', icon: BookOpen },
-    { id: 'Indie', name: 'Indie Highlights', icon: Compass },
-    { id: 'Backlog', name: 'Backlog (Unplayed)', icon: Clock },
+    { id: 'Action', name: 'Action & Combat', icon: FireIcon },
+    { id: 'RPG', name: 'RPGs & Fantasy', icon: SwordIcon },
+    { id: 'Open World', name: 'Open World', icon: GlobeHemisphereWestIcon },
+    { id: 'Shooter', name: 'Shooters & FPS', icon: CrosshairIcon },
+    { id: 'Souls-like', name: 'Souls-like & Tough', icon: SkullIcon },
+    { id: 'Roguelike', name: 'Roguelike & Dungeons', icon: RepeatIcon },
+    { id: 'Strategy', name: 'Strategy & 4X', icon: CrownIcon },
+    { id: 'Sci-Fi', name: 'Sci-Fi & Cyberpunk', icon: CpuIcon },
+    { id: 'Horror', name: 'Survival & Horror', icon: GhostIcon },
+    { id: 'Metroidvania', name: 'Metroidvania & Platformer', icon: MapTrifoldIcon },
+    { id: 'Racing', name: 'Racing & Driving', icon: SteeringWheelIcon },
+    { id: 'Story Rich', name: 'Story Rich Narrative', icon: BookOpenIcon },
+    { id: 'Indie', name: 'Indie Highlights', icon: CompassIcon },
+    { id: 'Backlog', name: 'Backlog (Unplayed)', icon: ClockIcon },
   ];
 
   const INITIAL_VISIBLE_COUNT = 5;
@@ -102,28 +94,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-64 shrink-0 hidden md:flex flex-col justify-between h-[calc(100vh-4rem)] bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border-r border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] p-4 select-none transition-colors">
+    <aside className="w-64 shrink-0 hidden md:flex flex-col justify-between sticky top-16 h-[calc(100vh-4rem)] bg-surface border-r border-line p-4 select-none">
       <div className="space-y-6 overflow-y-auto pr-1">
         {/* Main Library Navigation */}
         <div>
-          <div className="text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider px-3 mb-2">
+          <div className="text-xs font-semibold text-muted px-3 mb-2">
             Library
           </div>
           <nav className="space-y-1">
             {/* All Games */}
             <button
               onClick={() => handleCategoryClick('all')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-colors ${
                 currentCategory === 'all' && selectedGenre === null
-                  ? 'bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] border border-[#00FFD1]/40 shadow-[0_0_15px_rgba(0,255,209,0.2)] font-bold'
-                  : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#F1F5F9] dark:hover:text-[#F1F5F9] light:hover:text-[#0F172A] hover:bg-[#1A2A3D]/70 dark:hover:bg-[#1A2A3D]/70 light:hover:bg-[#F1F5F9] border border-transparent'
+                  ? 'bg-elevated text-accent font-semibold'
+                  : 'text-muted hover:text-ink hover:bg-elevated/70'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Layers className="w-4 h-4" />
+                <StackIcon weight={currentCategory === 'all' && selectedGenre === null ? 'fill' : 'regular'} className="w-4 h-4" />
                 <span>All Games</span>
               </div>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#E2E8F0] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#475569]">
+              <span className="text-xs font-mono text-muted">
                 {totalCount}
               </span>
             </button>
@@ -136,19 +128,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     handleCategoryClick('my-games');
                     onSelectTrackingFilter?.(null);
                   }}
-                  className={`flex-1 flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`flex-1 flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-colors ${
                     currentCategory === 'my-games' && selectedGenre === null && !activeTrackingFilter
-                      ? 'bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] border border-[#00FFD1]/40 shadow-[0_0_15px_rgba(0,255,209,0.2)] font-bold'
+                      ? 'bg-elevated text-accent font-semibold'
                       : currentCategory === 'my-games' && selectedGenre === null
-                      ? 'text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] bg-[#1A2A3D]/40 font-bold'
-                      : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#F1F5F9] dark:hover:text-[#F1F5F9] light:hover:text-[#0F172A] hover:bg-[#1A2A3D]/70 dark:hover:bg-[#1A2A3D]/70 light:hover:bg-[#F1F5F9] border border-transparent'
+                      ? 'text-accent bg-elevated/40 font-semibold'
+                      : 'text-muted hover:text-ink hover:bg-elevated/70'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Gamepad2 className="w-4 h-4 text-[#00FFD1]" />
+                    <GameControllerIcon weight={currentCategory === 'my-games' && selectedGenre === null ? 'fill' : 'regular'} className="w-4 h-4" />
                     <span>My Games</span>
                   </div>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#E2E8F0] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#475569]">
+                  <span className="text-xs font-mono text-muted">
                     {myGamesCount}
                   </span>
                 </button>
@@ -158,10 +150,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     e.stopPropagation();
                     setIsMyGamesOpen(!isMyGamesOpen);
                   }}
-                  title={isMyGamesOpen ? 'Collapse My Games sub-list' : 'Expand My Games sub-list'}
-                  className="p-2 ml-1 text-[#8BA0B2] hover:text-[#00FFD1] rounded-lg transition-colors"
+                  aria-label="My Games statuses"
+                  aria-expanded={isMyGamesOpen}
+                  className="p-2 ml-1 text-muted hover:text-ink rounded-lg transition-colors"
                 >
-                  <ChevronDown
+                  <CaretDownIcon
                     className={`w-3.5 h-3.5 transition-transform duration-200 ${
                       isMyGamesOpen ? '' : '-rotate-90'
                     }`}
@@ -171,8 +164,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
               {/* My Games Sub-list (Playing, Completed, On Hold, Planning, Dropped) */}
               {isMyGamesOpen && (
-                <div className="mt-1 ml-4 pl-3 border-l-2 border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] space-y-0.5 py-0.5">
-                  {trackingStatuses.map((st) => {
+                <div className="mt-1 ml-4 pl-3 border-l-2 border-line space-y-0.5 py-0.5">
+                  {STATUSES.map((st) => {
                     const isSubActive =
                       currentCategory === 'my-games' &&
                       selectedGenre === null &&
@@ -186,21 +179,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onSelectGenre(null);
                           onSelectTrackingFilter?.(activeTrackingFilter === st.id ? null : st.id);
                         }}
-                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm transition-colors ${
                           isSubActive
-                            ? 'bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] font-bold border border-[#00FFD1]/30 shadow-sm'
-                            : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#F1F5F9] dark:hover:text-[#F1F5F9] light:hover:text-[#0F172A] hover:bg-[#1A2A3D]/40'
+                            ? 'bg-elevated text-accent font-semibold'
+                            : 'text-muted hover:text-ink hover:bg-elevated/40'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${st.dotColor}`} />
-                          <span className="truncate">{st.name}</span>
+                          <st.icon weight="fill" className={`w-3.5 h-3.5 shrink-0 ${st.text}`} aria-hidden />
+                          <span className="truncate">{st.label}</span>
                         </div>
                         <span
-                          className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
+                          className={`text-xs font-mono ${
                             isSubActive
-                              ? 'bg-[#00FFD1]/20 text-[#00FFD1] font-bold'
-                              : 'bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#E2E8F0] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B]'
+                              ? 'text-accent'
+                              : 'text-muted'
                           }`}
                         >
                           {count}
@@ -215,17 +208,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Favorites */}
             <button
               onClick={() => handleCategoryClick('favorites')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-colors ${
                 currentCategory === 'favorites' && selectedGenre === null
-                  ? 'bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] border border-[#00FFD1]/40 shadow-[0_0_15px_rgba(0,255,209,0.2)] font-bold'
-                  : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#F1F5F9] dark:hover:text-[#F1F5F9] light:hover:text-[#0F172A] hover:bg-[#1A2A3D]/70 dark:hover:bg-[#1A2A3D]/70 light:hover:bg-[#F1F5F9] border border-transparent'
+                  ? 'bg-elevated text-accent font-semibold'
+                  : 'text-muted hover:text-ink hover:bg-elevated/70'
               }`}
             >
               <div className="flex items-center gap-3">
-                <Heart className="w-4 h-4 text-rose-400" />
+                <HeartIcon weight={currentCategory === 'favorites' && selectedGenre === null ? 'fill' : 'regular'} className="w-4 h-4 text-rose-400" />
                 <span>Favorites</span>
               </div>
-              <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#E2E8F0] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#475569]">
+              <span className="text-xs font-mono text-muted">
                 {favoritesCount}
               </span>
             </button>
@@ -237,26 +230,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center justify-between px-3 mb-2">
             <button
               onClick={() => setIsSectionOpen(!isSectionOpen)}
-              className="flex items-center gap-1.5 text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider hover:text-[#F1F5F9] transition-colors"
+              aria-expanded={isSectionOpen}
+              className="flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink transition-colors"
             >
-              <FolderHeart className="w-3.5 h-3.5 text-[#00FFD1]" />
               <span>Genres</span>
-              <ChevronDown
+              <CaretDownIcon
                 className={`w-3.5 h-3.5 transition-transform duration-200 ${
                   isSectionOpen ? '' : '-rotate-90'
                 }`}
               />
             </button>
-
-            {isSectionOpen && (
-              <button
-                onClick={() => setIsExtended(!isExtended)}
-                title={showAll ? 'Shrink genre list' : 'Extend full genre list'}
-                className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#E2E8F0] text-[#00FFD1] hover:bg-[#00FFD1]/20 transition-all font-semibold"
-              >
-                {showAll ? 'Shrink' : 'Extend'}
-              </button>
-            )}
           </div>
 
           {isSectionOpen && (
@@ -269,30 +252,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     key={col.id}
                     onClick={() => handleCollectionClick(col.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors ${
                       isActive
-                        ? 'bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#E2E8F0] text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] border border-[#00FFD1]/40 font-bold shadow-sm'
-                        : 'text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#F1F5F9] dark:hover:text-[#F1F5F9] light:hover:text-[#0F172A] hover:bg-[#1A2A3D]/50 dark:hover:bg-[#1A2A3D]/50 light:hover:bg-[#F1F5F9] border border-transparent'
+                        ? 'bg-elevated text-accent font-semibold'
+                        : 'text-muted hover:text-ink hover:bg-elevated/50'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 truncate">
-                      <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#00FFD1]' : 'text-[#8BA0B2]'}`} />
+                      <Icon weight={isActive ? 'fill' : 'regular'} className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-muted'}`} />
                       <span className="truncate">{col.name}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {typeof count === 'number' && (
                         <span
-                          className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                          className={`text-xs font-mono ${
                             isActive
-                              ? 'bg-[#00FFD1]/20 text-[#00FFD1] font-bold'
-                              : 'bg-[#0B141E] dark:bg-[#0B141E] light:bg-[#E2E8F0] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B]'
+                              ? 'text-accent'
+                              : 'text-muted'
                           }`}
                         >
                           {count}
                         </span>
-                      )}
-                      {isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#00FFD1] shadow-[0_0_8px_#00FFD1]" />
                       )}
                     </div>
                   </button>
@@ -302,17 +282,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {/* Bottom Extend / Shrink Toggle Button */}
               <button
                 onClick={() => setIsExtended(!showAll)}
-                className="w-full flex items-center justify-center gap-1.5 py-1.5 mt-1 rounded-xl text-xs font-semibold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] hover:text-[#00FFD1] dark:hover:text-[#00FFD1] light:hover:text-[#00897B] hover:bg-[#1A2A3D]/40 dark:hover:bg-[#1A2A3D]/40 light:hover:bg-[#F1F5F9] transition-all"
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 mt-1 rounded-xl text-xs text-muted hover:text-ink hover:bg-elevated/40 transition-all"
               >
                 {showAll ? (
                   <>
                     <span>Show Less</span>
-                    <ChevronUp className="w-3.5 h-3.5" />
+                    <CaretUpIcon className="w-3.5 h-3.5" />
                   </>
                 ) : (
                   <>
                     <span>Show More ({collections.length - INITIAL_VISIBLE_COUNT} more)</span>
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    <CaretDownIcon className="w-3.5 h-3.5" />
                   </>
                 )}
               </button>

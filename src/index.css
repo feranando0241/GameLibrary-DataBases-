@@ -2,72 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens: RGB channels so Tailwind opacity modifiers (bg-accent/40) work.
+   Dark-only by design; a light theme = one more block of these variables. */
 @layer base {
   :root {
-    color-scheme: dark light;
+    /* Radii: 8px labels (rounded-lg), 12px controls (rounded-xl), 16px cards & panels (rounded-2xl) */
+    color-scheme: dark;
+    /* Neutral graphite: no blue tint, so cover art carries the color */
+    --canvas: 14 16 20;      /* #0E1014 page background */
+    --surface: 22 25 31;     /* #16191F cards, sidebar, bars */
+    --elevated: 31 35 43;    /* #1F232B hover / selected rows */
+    --line: 44 49 59;        /* #2C313B borders */
+    --ink: 237 239 243;      /* #EDEFF3 primary text, 15.3:1 on surface */
+    --muted: 166 173 186;    /* #A6ADBA secondary text, 7.8:1 on surface */
+    --accent: 56 189 248;    /* #38BDF8 selection & primary action ONLY. 8.2:1 as text, 8.9:1 dark label on it */
+    --accent-hover: 125 211 252; /* #7DD3FC */
+    
   }
 
   body {
     margin: 0;
-    font-family: 'Rajdhani', 'Chakra Petch', system-ui, -apple-system, sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.025em;
+    background-color: rgb(var(--canvas));
+    color: rgb(var(--ink));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  h1, h2, h3, .font-display {
-    font-family: 'Orbitron', 'Rajdhani', sans-serif;
-    letter-spacing: 0.04em;
-  }
-
-  html.dark body {
-    background-color: #0B141E;
-    color: #F1F5F9;
-  }
-
-  html:not(.dark) body {
-    background-color: #F1F5F9;
-    color: #0F172A;
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-html.dark ::-webkit-scrollbar-track {
-  background: #0B141E;
-}
-
-html:not(.dark) ::-webkit-scrollbar-track {
-  background: #E2E8F0;
-}
-
-html.dark ::-webkit-scrollbar-thumb {
-  background: #22354B;
-  border-radius: 4px;
-}
-
-html:not(.dark) ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #00FFD1;
-}
-
-html.dark * {
+/* Scrollbar */
+* {
   scrollbar-width: thin;
-  scrollbar-color: #22354B #0B141E;
-}
-
-html:not(.dark) * {
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 #E2E8F0;
+  scrollbar-color: rgb(var(--line)) rgb(var(--canvas));
 }

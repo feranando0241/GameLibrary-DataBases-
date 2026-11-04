@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  Heart,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from 'lucide-react';
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ArrowsDownUpIcon,
+  HeartIcon,
+} from '@phosphor-icons/react';
 import type { Game, SortField, SortDirection } from '../../types/game';
 import { Button } from '../ui/Button';
 
@@ -27,63 +27,63 @@ export const GameListView: React.FC<GameListViewProps> = ({
 }) => {
   const renderSortIndicator = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="w-3.5 h-3.5 opacity-40 ml-1" />;
+      return <ArrowsDownUpIcon className="w-3.5 h-3.5 opacity-40 ml-1" />;
     }
     return sortDirection === 'asc' ? (
-      <ArrowUp className="w-3.5 h-3.5 text-[#00FFD1] ml-1" />
+      <ArrowUpIcon className="w-3.5 h-3.5 text-accent ml-1" />
     ) : (
-      <ArrowDown className="w-3.5 h-3.5 text-[#00FFD1] ml-1" />
+      <ArrowDownIcon className="w-3.5 h-3.5 text-accent ml-1" />
     );
   };
 
   return (
-    <div className="w-full overflow-hidden rounded-2xl bg-[#131F2E] dark:bg-[#131F2E] light:bg-white border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] shadow-xl transition-colors">
+    <div className="w-full overflow-hidden rounded-2xl bg-surface border border-line shadow-xl transition-colors">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A]">
+        <table className="w-full text-left text-sm text-ink">
           {/* Table Header */}
-          <thead className="bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#F8FAFC] text-[11px] font-bold text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] uppercase tracking-wider border-b border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
+          <thead className="bg-elevated text-xs font-semibold text-muted border-b border-line">
             <tr>
               <th className="py-3.5 pl-4 pr-2 w-12 text-center">Fav</th>
               <th
-                onClick={() => onSortChange('title')}
-                className="py-3.5 px-4 cursor-pointer hover:text-[#00FFD1] transition-colors"
+                className="py-3.5 px-4"
+                aria-sort={sortField === 'title' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
-                <div className="flex items-center">
+                <button type="button" onClick={() => onSortChange('title')} className="flex items-center hover:text-ink transition-colors">
                   <span>Game & Publisher</span>
                   {renderSortIndicator('title')}
-                </div>
+                </button>
               </th>
               <th className="py-3.5 px-4">Score</th>
               <th className="py-3.5 px-4">Platform</th>
               <th
-                onClick={() => onSortChange('hoursPlayed')}
-                className="py-3.5 px-4 cursor-pointer hover:text-[#00FFD1] transition-colors text-right"
+                className="py-3.5 px-4 text-right"
+                aria-sort={sortField === 'hoursPlayed' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
-                <div className="flex items-center justify-end">
+                <button type="button" onClick={() => onSortChange('hoursPlayed')} className="flex items-center justify-end hover:text-ink transition-colors">
                   <span>Hours Logged</span>
                   {renderSortIndicator('hoursPlayed')}
-                </div>
+                </button>
               </th>
               <th
-                onClick={() => onSortChange('popularity')}
-                className="py-3.5 px-4 cursor-pointer hover:text-[#00FFD1] transition-colors text-right"
+                className="py-3.5 px-4 text-right"
+                aria-sort={sortField === 'popularity' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
               >
-                <div className="flex items-center justify-end">
+                <button type="button" onClick={() => onSortChange('popularity')} className="flex items-center justify-end hover:text-ink transition-colors">
                   <span>Popularity</span>
                   {renderSortIndicator('popularity')}
-                </div>
+                </button>
               </th>
               <th className="py-3.5 pr-4 pl-2 text-right">Action</th>
             </tr>
           </thead>
 
           {/* Table Body */}
-          <tbody className="divide-y divide-[#22354B]/60 dark:divide-[#22354B]/60 light:divide-[#E2E8F0] text-xs">
+          <tbody className="divide-y divide-line/60 text-xs">
             {games.map((game) => (
               <tr
                 key={game.id}
                 onClick={() => onSelectGame(game)}
-                className="group hover:bg-[#1A2A3D]/70 dark:hover:bg-[#1A2A3D]/70 light:hover:bg-[#F1F5F9] transition-colors cursor-pointer"
+                className="group hover:bg-elevated/70 transition-colors cursor-pointer"
               >
                 {/* Favorite Toggle */}
                 <td
@@ -92,13 +92,13 @@ export const GameListView: React.FC<GameListViewProps> = ({
                 >
                   <button
                     onClick={(e) => onToggleFavorite(e, game.id)}
-                    className="p-1 rounded-md text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#94A3B8] hover:text-rose-400 transition-colors outline-none focus:ring-2 focus:ring-[#00FFD1]"
-                    title="Toggle Favorite"
+                    className="p-1 rounded-lg text-muted hover:text-rose-400 transition-colors outline-none focus:ring-2 focus:ring-accent"
+                    aria-label={game.isFavorite ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
+                    aria-pressed={game.isFavorite}
                   >
-                    <Heart
-                      className={`w-4 h-4 ${
-                        game.isFavorite ? 'fill-rose-500 text-rose-500' : ''
-                      }`}
+                    <HeartIcon
+                      weight={game.isFavorite ? 'fill' : 'regular'}
+                      className={`w-4 h-4 ${game.isFavorite ? 'text-rose-500' : ''}`}
                     />
                   </button>
                 </td>
@@ -109,13 +109,13 @@ export const GameListView: React.FC<GameListViewProps> = ({
                     <img
                       src={game.coverUrl}
                       alt={game.title}
-                      className="w-10 h-14 object-cover rounded-xl border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1] shrink-0"
+                      className="w-10 h-14 object-cover rounded-xl border border-line shrink-0"
                     />
                     <div className="min-w-0">
-                      <div className="font-bold text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] group-hover:text-[#00FFD1] dark:group-hover:text-[#00FFD1] light:group-hover:text-[#00897B] transition-colors truncate max-w-xs md:max-w-md">
+                      <div className="font-bold text-ink truncate max-w-xs md:max-w-md">
                         {game.title}
                       </div>
-                      <div className="text-[11px] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] truncate">
+                      <div className="text-xs text-muted truncate">
                         {game.developer} • <span className="font-mono">{game.releaseYear}</span> • {game.format}
                       </div>
                     </div>
@@ -124,32 +124,32 @@ export const GameListView: React.FC<GameListViewProps> = ({
 
                 {/* Score */}
                 <td className="py-3 px-4 whitespace-nowrap">
-                  <span className="font-mono font-bold text-xs text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B] px-2 py-0.5 rounded-md bg-[#00FFD1]/10 border border-[#00FFD1]/30">
+                  <span className="font-mono font-bold text-xs text-ink">
                     ★ {game.averageScore}%
                   </span>
                 </td>
 
                 {/* Platform Format */}
                 <td className="py-3 px-4 whitespace-nowrap">
-                  <span className="font-mono text-xs px-2 py-0.5 rounded bg-[#1A2A3D] dark:bg-[#1A2A3D] light:bg-[#F1F5F9] text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] border border-[#22354B] dark:border-[#22354B] light:border-[#CBD5E1]">
+                  <span className="font-mono text-xs px-2 py-0.5 rounded-lg bg-elevated text-muted border border-line">
                     {game.format}
                   </span>
                 </td>
 
                 {/* Hours Logged */}
-                <td className="py-3 px-4 text-right font-mono text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A]">
+                <td className="py-3 px-4 text-right font-mono text-ink">
                   {game.hoursPlayed > 0 ? (
-                    <span className="font-bold text-[#00FFD1] dark:text-[#00FFD1] light:text-[#00897B]">
+                    <span className="font-bold text-ink">
                       {game.hoursPlayed.toFixed(1)} hrs
                     </span>
                   ) : (
-                    <span className="text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#94A3B8]">--</span>
+                    <span className="text-muted">--</span>
                   )}
                 </td>
 
                 {/* Popularity */}
-                <td className="py-3 px-4 text-right font-mono text-[#8BA0B2] dark:text-[#8BA0B2] light:text-[#64748B] whitespace-nowrap">
-                  <span className="text-[#F1F5F9] dark:text-[#F1F5F9] light:text-[#0F172A] font-medium">
+                <td className="py-3 px-4 text-right font-mono text-muted whitespace-nowrap">
+                  <span className="text-ink font-medium">
                     #{game.popularity.toLocaleString()}
                   </span>
                 </td>
