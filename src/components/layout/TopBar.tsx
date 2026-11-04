@@ -13,6 +13,7 @@ import {
 
 import { GeekbondLogo } from '../ui/GeekbondLogo';
 
+// Picks the shortcut hint shown in the search box (⌘K vs Ctrl+K); App handles both keys.
 const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform);
 
 interface TopBarProps {
@@ -20,6 +21,11 @@ interface TopBarProps {
   setSearchQuery: (query: string) => void;
 }
 
+/**
+ * Sticky header: logo, global search (focus with Ctrl/⌘+K) and the downloads/profile menus.
+ * The search text lives in App's filter state. The downloads and profile menus are UI-only
+ * placeholders with hard-coded data until there are user accounts.
+ */
 export const TopBar: React.FC<TopBarProps> = ({
   searchQuery,
   setSearchQuery,
@@ -178,7 +184,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <div className="absolute right-0 mt-3 w-56 bg-surface border border-line rounded-2xl shadow-2xl p-2 z-50">
               <div className="px-3 py-2 border-b border-line mb-1">
                 <p className="text-xs font-semibold text-ink">Alex Vance</p>
-                <p className="text-xs text-muted">alex.vance@uofl.edu</p>
+                <p className="text-xs text-muted">alex.vance@example.com</p>
                 <div className="mt-2 flex items-center justify-between text-xs text-muted bg-elevated px-2 py-1 rounded-lg font-bold">
                   <span>Geekbond Pro Member</span>
                   <span className="font-mono">ONLINE</span>

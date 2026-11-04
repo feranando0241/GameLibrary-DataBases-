@@ -6,6 +6,7 @@ interface GeekbondLogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
+/** Geekbond wordmark, used in the TopBar. */
 export const GeekbondLogo: React.FC<GeekbondLogoProps> = ({
   className = '',
   showSubtitle = true,

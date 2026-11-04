@@ -8,26 +8,33 @@ import {
   TrendUpIcon,
   TrophyIcon,
 } from '@phosphor-icons/react';
-import type { Game, UserTrackEntry } from '../../types/game';
+import type { Game, UserGame } from '../../types/game';
 import { STATUS } from '../../lib/status';
 import { Button } from '../ui/Button';
 
 interface MediaHeroProps {
   game: Game;
+  /** Returns to the library view */
   onBack: () => void;
+  /** Opens the tracking modal for this game */
   onOpenTrack: () => void;
-  currentTrack?: UserTrackEntry;
+  /** The current user's row for this game, if any */
+  userGame?: UserGame;
 }
 
+/**
+ * Detail page for one game: banner, poster, quick stats (score, hours, achievements) and synopsis.
+ * Replaces the library view while a game is selected; Escape or the back button closes it.
+ */
 export const MediaHero: React.FC<MediaHeroProps> = ({
   game,
   onBack,
   onOpenTrack,
-  currentTrack,
+  userGame,
 }) => {
-  const achievementPercentage = Math.round(
-    (game.achievements.unlocked / Math.max(1, game.achievements.total)) * 100
-  );
+  const status = userGame?.status;
+  const unlocked = userGame?.achievementsUnlocked ?? 0;
+  const achievementPercentage = Math.round((unlocked / Math.max(1, game.achievementsTotal)) * 100);
 
   return (
     <div className="w-full min-h-full pb-16">
@@ -78,10 +85,10 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
                 variant="primary"
                 size="md"
                 onClick={onOpenTrack}
-                leftIcon={currentTrack ? <CheckIcon className="w-4 h-4 text-canvas" /> : <BookmarkSimpleIcon className="w-4 h-4 text-canvas" />}
+                leftIcon={status ? <CheckIcon className="w-4 h-4 text-canvas" /> : <BookmarkSimpleIcon className="w-4 h-4 text-canvas" />}
                 className="w-full"
               >
-                {currentTrack ? `${STATUS[currentTrack.status].label} · Edit` : 'Start Tracking'}
+                {status ? `${STATUS[status].label} · Edit` : 'Start Tracking'}
               </Button>
             </div>
           </div>
@@ -122,7 +129,7 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
                   <ClockIcon className="w-3.5 h-3.5" /> Hours Played
                 </span>
                 <span className="text-lg font-bold font-mono text-ink mt-1 block">
-                  {game.hoursPlayed.toFixed(1)} hrs
+                  {(userGame?.hoursPlayed ?? 0).toFixed(1)} hrs
                 </span>
               </div>
 
@@ -140,7 +147,7 @@ export const MediaHero: React.FC<MediaHeroProps> = ({
                   <TrophyIcon className="w-3.5 h-3.5 text-muted" /> Achievements
                 </span>
                 <span className="text-lg font-bold font-mono text-ink mt-1 block">
-                  {game.achievements.unlocked}/{game.achievements.total} ({achievementPercentage}%)
+                  {unlocked}/{game.achievementsTotal} ({achievementPercentage}%)
                 </span>
               </div>
             </div>

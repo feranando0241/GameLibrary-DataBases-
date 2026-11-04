@@ -3,10 +3,15 @@ import React from 'react';
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg' | 'icon';
+  /** Rendered before / after the label */
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
+/**
+ * Shared button with the app's variants and sizes. Accepts every native <button> prop,
+ * so `disabled`, `type`, `aria-*` etc. pass straight through.
+ */
 export const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',

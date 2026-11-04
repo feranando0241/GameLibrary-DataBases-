@@ -3,23 +3,31 @@ import {
   CheckIcon,
   PlusIcon,
 } from '@phosphor-icons/react';
-import type { Game, UserTrackingStatus } from '../../types/game';
+import type { Game, UserGame } from '../../types/game';
 import { STATUS } from '../../lib/status';
 
 interface MediaCardProps {
   game: Game;
+  /** Opens the game's detail page (MediaHero) */
   onSelect: (game: Game) => void;
+  /** Opens the tracking modal; the quick-track button is hidden when omitted */
   onOpenTrack?: (e: React.MouseEvent, game: Game) => void;
-  trackingStatus?: UserTrackingStatus;
+  /** The current user's row for this game, if any */
+  userGame?: UserGame;
 }
 
+/**
+ * One poster card in the grid: cover, title, score, tracking status and hours played.
+ * Catalog data comes from `game`; everything personal comes from `userGame`.
+ */
 export const MediaCard: React.FC<MediaCardProps> = ({
   game,
   onSelect,
   onOpenTrack,
-  trackingStatus,
+  userGame,
 }) => {
-  const status = trackingStatus ? STATUS[trackingStatus] : undefined;
+  const status = userGame?.status ? STATUS[userGame.status] : undefined;
+  const hours = userGame?.hoursPlayed ?? 0;
 
   return (
     <div className="group relative flex flex-col motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:-translate-y-1">
@@ -73,7 +81,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
       <div className="mt-1 flex items-center justify-between text-xs text-muted">
         <span className="truncate max-w-[130px]">{game.developer}</span>
         <span className="font-mono">
-          {game.hoursPlayed ? `${game.hoursPlayed.toFixed(1)}h` : game.releaseYear}
+          {hours ? `${hours.toFixed(1)}h` : game.releaseYear}
         </span>
       </div>
     </div>

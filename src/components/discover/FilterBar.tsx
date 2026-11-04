@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react';
-import { DEFAULT_FILTERS, type FilterBarState } from '../../lib/filters';
+import { DEFAULT_FILTERS, SORTS, YEARS, type FilterBarState } from '../../lib/filters';
 import { STATUSES } from '../../lib/status';
-import type { UserTrackingStatus } from '../../types/game';
+import { GAME_FORMATS, type UserTrackingStatus } from '../../types/game';
 
 interface FilterBarProps {
   filters: FilterBarState;
@@ -24,11 +24,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   status,
   onStatusChange,
 }) => {
-  const updateField = (field: keyof FilterBarState, value: string) =>
-    onChange({ ...filters, [field]: value });
+  // Select values are always one of the options rendered below, so the casts are safe.
+  const updateField = <K extends keyof FilterBarState>(field: K, value: string) =>
+    onChange({ ...filters, [field]: value as FilterBarState[K] });
 
-  const hasActiveFilters =
-    filters.search || filters.genre || filters.year || filters.platform || filters.status;
+  const hasActiveFilters = filters.search || filters.genre || filters.year || filters.platform;
 
   return (
     // One scrollable row on phones, wraps from sm up
@@ -68,11 +68,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         className={select}
       >
         <option value="">Any Year</option>
-        <option value="2025">2025 (Upcoming)</option>
-        <option value="2024">2024</option>
-        <option value="2023">2023</option>
-        <option value="2020s">2020s</option>
-        <option value="2010s">2010s & Older</option>
+        {YEARS.map((y) => (
+          <option key={y.id} value={y.id}>
+            {y.label}
+          </option>
+        ))}
       </select>
 
       <select
@@ -82,11 +82,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         className={select}
       >
         <option value="">All Platforms</option>
-        <option value="PC">PC</option>
-        <option value="PlayStation 5">PlayStation 5</option>
-        <option value="Xbox Series X">Xbox Series X</option>
-        <option value="Nintendo Switch">Nintendo Switch</option>
-        <option value="Steam Deck">Steam Deck</option>
+        {GAME_FORMATS.map((f) => (
+          <option key={f} value={f}>
+            {f}
+          </option>
+        ))}
       </select>
 
       {hasActiveFilters && (
@@ -104,11 +104,11 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         onChange={(e) => updateField('sort', e.target.value)}
         className={`${select} sm:ml-auto`}
       >
-        <option value="SCORE_DESC">Top Rated</option>
-        <option value="HOURS_DESC">Most Played</option>
-        <option value="POPULARITY_DESC">Most Popular</option>
-        <option value="TITLE_ASC">Title A–Z</option>
-        <option value="YEAR_DESC">Newest</option>
+        {SORTS.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.label}
+          </option>
+        ))}
       </select>
     </div>
   );

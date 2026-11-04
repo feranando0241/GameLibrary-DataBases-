@@ -6,37 +6,43 @@ import {
   TrashIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import type { Game, UserTrackEntry, UserTrackingStatus } from '../../types/game';
+import type { Game, UserGame, UserTrackingStatus } from '../../types/game';
 import { STATUSES } from '../../lib/status';
 import { Button } from '../ui/Button';
 
 interface TrackingModalProps {
   game: Game;
   onClose: () => void;
-  currentEntry?: UserTrackEntry;
-  onSave: (entry: UserTrackEntry) => void;
-  onDelete?: (gameId: string) => void;
+  /** The current user's row for this game, if any */
+  userGame?: UserGame;
+  /** Persists the changed fields; rejects on failure so the modal can stay open and show the error */
+  onSave: (changes: Partial<UserGame>) => Promise<void>;
 }
 
 const sectionLabel = 'block text-sm font-semibold text-ink mb-2';
 const stepper =
   'w-9 h-9 rounded-lg bg-elevated text-ink font-bold hover:bg-accent hover:text-canvas transition-colors flex items-center justify-center';
 
+/** Matches the input's min/max and keeps one decimal, so 64.8 + 1 stores 65.8, not 65.80000000000001. */
+const MAX_HOURS = 9999;
+const clampHours = (h: number) => Math.round(Math.min(MAX_HOURS, Math.max(0, h || 0)) * 10) / 10;
+
 /** Native <dialog>: focus trap, Escape and top-layer backdrop come from the browser. */
 export const TrackingModal: React.FC<TrackingModalProps> = ({
   game,
   onClose,
-  currentEntry,
+  userGame,
   onSave,
-  onDelete,
 }) => {
   const ref = useRef<HTMLDialogElement>(null);
-  const [status, setStatus] = useState<UserTrackingStatus>(currentEntry?.status || 'CURRENT');
-  const [score, setScore] = useState<number>(currentEntry?.score ?? game.averageScore ?? 90);
-  const [progress, setProgress] = useState<number>(
-    currentEntry?.progress ?? (game.hoursPlayed ? Math.round(game.hoursPlayed) : 5)
-  );
-  const [notes, setNotes] = useState<string>(currentEntry?.notes || '');
+  const isTracked = Boolean(userGame?.status);
+  const [status, setStatus] = useState<UserTrackingStatus>(userGame?.status ?? 'CURRENT');
+  // null = not rated; the community average is only where the slider starts
+  const [score, setScore] = useState<number | null>(userGame?.score ?? null);
+  const [hours, setHours] = useState<number>(userGame?.hoursPlayed ?? 0);
+  const [notes, setNotes] = useState<string>(userGame?.notes ?? '');
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -44,25 +50,30 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
     return () => dialog?.close();
   }, []);
 
-  const handleSave = () => {
-    onSave({
-      gameId: game.id,
-      status,
-      score,
-      progress,
-      notes,
-      updatedAt: new Date().toISOString(),
-    });
-    onClose();
+  // Closing mid-save would hide a failure, so every close path is blocked until the save settles.
+  const close = () => !isSaving && onClose();
+
+  // Only the tracking fields are sent; the API merges them, so favorite etc. are kept.
+  const save = async (changes: Partial<UserGame>) => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await onSave(changes);
+      onClose();
+    } catch {
+      setError('Could not save your changes. Please try again.');
+      setIsSaving(false);
+    }
   };
 
   return (
     <dialog
       ref={ref}
       aria-labelledby="tracking-title"
+      onCancel={(e) => isSaving && e.preventDefault()}
       onClose={onClose}
       // Click on the backdrop (the dialog element itself, outside the inner panel) closes
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && close()}
       className="w-[calc(100%-2rem)] max-w-lg p-0 bg-surface text-ink border border-line rounded-2xl shadow-2xl backdrop:bg-black/80 backdrop:backdrop-blur-sm"
     >
       <div className="p-6 space-y-6">
@@ -85,7 +96,8 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={close}
+            disabled={isSaving}
             aria-label="Close"
             className="p-1.5 rounded-xl text-muted hover:text-ink hover:bg-elevated transition-colors"
           >
@@ -127,7 +139,9 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
               >
                 <StarIcon className="w-3.5 h-3.5" /> Your Score
               </label>
-              <span className="font-mono font-bold text-sm text-ink">{score} / 100</span>
+              <span className="font-mono font-bold text-sm text-ink">
+                {score === null ? 'Not rated' : `${score} / 100`}
+              </span>
             </div>
             <input
               id="track-score"
@@ -135,7 +149,7 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
               min="0"
               max="100"
               step="1"
-              value={score}
+              value={score ?? game.averageScore}
               onChange={(e) => setScore(Number(e.target.value))}
               className="w-full accent-accent cursor-pointer"
             />
@@ -150,7 +164,7 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
             </label>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setProgress((p) => Math.max(0, p - 1))}
+                onClick={() => setHours((h) => clampHours(h - 1))}
                 aria-label="Remove one hour"
                 className={stepper}
               >
@@ -160,13 +174,14 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
                 id="track-hours"
                 type="number"
                 min="0"
-                max="9999"
-                value={progress}
-                onChange={(e) => setProgress(Math.max(0, Number(e.target.value)))}
+                max={MAX_HOURS}
+                step="0.1"
+                value={hours}
+                onChange={(e) => setHours(clampHours(Number(e.target.value)))}
                 className="min-w-0 flex-1 text-center bg-surface text-ink font-mono font-bold text-sm py-1.5 rounded-lg border border-line outline-none focus:ring-1 focus:ring-accent"
               />
               <button
-                onClick={() => setProgress((p) => p + 1)}
+                onClick={() => setHours((h) => clampHours(h + 1))}
                 aria-label="Add one hour"
                 className={stepper}
               >
@@ -190,14 +205,18 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
           />
         </div>
 
+        {error && (
+          <p role="alert" className="text-sm text-rose-400">
+            {error}
+          </p>
+        )}
+
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
-          {currentEntry && onDelete ? (
+          {isTracked ? (
             <button
-              onClick={() => {
-                onDelete(game.id);
-                onClose();
-              }}
+              onClick={() => save({ status: null, score: null, notes: null })}
+              disabled={isSaving}
               className="text-sm text-rose-400 hover:text-rose-300 flex items-center gap-1.5 p-2 -ml-2"
             >
               <TrashIcon className="w-4 h-4" /> Stop Tracking
@@ -207,16 +226,17 @@ export const TrackingModal: React.FC<TrackingModalProps> = ({
           )}
 
           <div className="flex items-center gap-2.5">
-            <Button variant="ghost" size="md" onClick={onClose}>
+            <Button variant="ghost" size="md" onClick={close} disabled={isSaving}>
               Cancel
             </Button>
             <Button
               variant="primary"
               size="md"
-              onClick={handleSave}
+              onClick={() => save({ status, score, hoursPlayed: hours, notes: notes.trim() || null })}
+              disabled={isSaving}
               leftIcon={<CheckIcon className="w-4 h-4" />}
             >
-              {currentEntry ? 'Save Changes' : 'Start Tracking'}
+              {isTracked ? 'Save Changes' : 'Start Tracking'}
             </Button>
           </div>
         </div>

@@ -29,6 +29,7 @@ export const STATUSES: {
   { id: 'DROPPED', label: 'Dropped', icon: XIcon, text: 'text-red-400', pill: 'bg-red-400 text-canvas' }, // stopped
 ];
 
+/** Lookup by id, e.g. STATUS[userGame.status].label. */
 export const STATUS = Object.fromEntries(STATUSES.map((s) => [s.id, s])) as Record<
   UserTrackingStatus,
   (typeof STATUSES)[number]

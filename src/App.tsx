@@ -4,108 +4,90 @@ import {
   ListIcon,
   SquaresFourIcon,
 } from '@phosphor-icons/react';
-import type { Game, FilterCategory, SortField, UserTrackEntry, UserTrackingStatus } from './types/game';
+import type { Game, FilterCategory, Library, UserGame, UserTrackingStatus } from './types/game';
 import { STATUS, STATUSES } from './lib/status';
-import { mockGames } from './data/mockGames';
+import { COLLECTION } from './lib/collections';
+import {
+  DEFAULT_FILTERS,
+  SORT,
+  SORTS,
+  applyFilters,
+  countCategories,
+  countCollections,
+  countStatuses,
+  genreOptions,
+  type FilterBarState,
+} from './lib/filters';
+import { getGames, getLibrary, newUserGame, saveUserGame } from './lib/api';
 import { TopBar } from './components/layout/TopBar';
 import { Sidebar } from './components/layout/Sidebar';
 import { FilterBar } from './components/discover/FilterBar';
-import { DEFAULT_FILTERS, type FilterBarState } from './lib/filters';
-import { MediaCard } from './components/discover/MediaCard';
 import { MediaHero } from './components/media-detail/MediaHero';
 import { TrackingModal } from './components/tracker/TrackingModal';
 import { GameListView } from './components/library/GameListView';
+import { GameGrid } from './components/library/GameGrid';
 import { PixelWaves } from './components/layout/PixelWaves';
 
-// FilterBar sort value ↔ list-view column
-const SORT_FIELD: Record<string, SortField> = {
-  SCORE_DESC: 'averageScore',
-  HOURS_DESC: 'hoursPlayed',
-  POPULARITY_DESC: 'popularity',
-  TITLE_ASC: 'title',
-  YEAR_DESC: 'releaseYear',
-};
+/** Page heading for the current sidebar selection. */
+function pageTitle(
+  category: FilterCategory,
+  collection: string | null,
+  status: UserTrackingStatus | null
+): string {
+  if (collection) return COLLECTION[collection]?.label ?? collection;
+  const statusLabel = status ? STATUS[status].label : null;
+  if (category === 'my-games') return statusLabel ? `My Games — ${statusLabel}` : 'My Games';
+  if (category === 'favorites') return 'Favorites';
+  return statusLabel ?? 'All Games';
+}
 
+/**
+ * Root component and the only stateful owner of the app's data.
+ * - Loads the catalog and the user's library once from lib/api.ts and keeps them in state.
+ * - Owns the view state (open game, tracking modal, grid/list) and the library query
+ *   (sidebar selection + filter bar); the visible list is derived from both via lib/filters.ts.
+ * - Every write goes through `persist`, so the API stays the single source of truth.
+ * Child components are presentational: they get data via props and report actions via callbacks.
+ */
 export const App: React.FC = () => {
-  // Main Games State
-  const [games, setGames] = useState<Game[]>(mockGames);
+  // Data: everything comes from lib/api.ts
+  const [games, setGames] = useState<Game[]>([]);
+  const [library, setLibrary] = useState<Library>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([getGames(), getLibrary()])
+      .then(([g, l]) => {
+        if (!active) return;
+        setGames(g);
+        setLibrary(l);
+      })
+      .catch(() => active && setLoadError('Could not load your library.'))
+      .finally(() => active && setIsLoading(false));
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // View state
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [trackingTarget, setTrackingTarget] = useState<Game | null>(null);
-  const [userTracks, setUserTracks] = useState<Record<string, UserTrackEntry>>({
-    'cyberpunk-2077': {
-      gameId: 'cyberpunk-2077',
-      status: 'CURRENT',
-      score: 95,
-      progress: 142,
-      notes: 'Playing through the Phantom Liberty espionage expansion.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'elden-ring': {
-      gameId: 'elden-ring',
-      status: 'COMPLETED',
-      score: 98,
-      progress: 218,
-      notes: 'Completed Shadow of the Erdtree DLC 100%.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'baldurs-gate-3': {
-      gameId: 'baldurs-gate-3',
-      status: 'CURRENT',
-      score: 96,
-      progress: 184,
-      notes: 'Act III in the Lower City.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'witcher-3': {
-      gameId: 'witcher-3',
-      status: 'COMPLETED',
-      score: 97,
-      progress: 310,
-      notes: 'Finished Blood and Wine & Hearts of Stone.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'hades-2': {
-      gameId: 'hades-2',
-      status: 'CURRENT',
-      score: 92,
-      progress: 65,
-      notes: 'Deep runs toward the surface.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'dead-cells': {
-      gameId: 'dead-cells',
-      status: 'PAUSED',
-      score: 92,
-      progress: 93,
-      notes: 'Stuck at 5 Boss Stem Cells.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'hollow-knight-silksong': {
-      gameId: 'hollow-knight-silksong',
-      status: 'PLANNING',
-      score: 0,
-      progress: 0,
-      notes: 'Waiting for official release.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-    'starfield': {
-      gameId: 'starfield',
-      status: 'DROPPED',
-      score: 68,
-      progress: 45,
-      notes: 'Explored 10 star systems, campaign became too repetitive.',
-      updatedAt: '2026-11-03T12:00:00.000Z',
-    },
-  });
-
-  // Filter Bar State (Pure Video Games)
-  const [filterState, setFilterState] = useState<FilterBarState>(DEFAULT_FILTERS);
-
-  // View & Category State
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Library query: sidebar selection + filter bar
+  const [filterState, setFilterState] = useState<FilterBarState>(DEFAULT_FILTERS);
   const [sidebarCategory, setSidebarCategory] = useState<FilterCategory>('all');
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [activeTrackingFilter, setActiveTrackingFilter] = useState<UserTrackingStatus | null>(null);
+
+  const showCategory = (cat: FilterCategory) => {
+    setSidebarCategory(cat);
+    setSelectedGenre(null);
+    setActiveTrackingFilter(null);
+  };
 
   // Global Keyboard Shortcuts (Ctrl+K and Escape)
   useEffect(() => {
@@ -115,242 +97,49 @@ export const App: React.FC = () => {
         const searchInput = document.getElementById('global-search-input');
         searchInput?.focus();
       }
-      if (e.key === 'Escape') {
-        if (trackingTarget) {
-          setTrackingTarget(null);
-        } else if (selectedGame) {
-          setSelectedGame(null);
-        }
-      }
+      // The tracking <dialog> handles its own Escape (and blocks it while saving).
+      if (e.key === 'Escape' && !trackingTarget) setSelectedGame(null);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedGame, trackingTarget]);
+  }, [trackingTarget]);
 
-  // Actions
+  // Actions: send only the changed fields (the API merges them), then keep the row it returns
+  const persist = async (gameId: string, changes: Partial<UserGame>) => {
+    const saved = await saveUserGame(gameId, changes);
+    setLibrary((prev) => ({ ...prev, [gameId]: saved }));
+  };
+
   const handleToggleFavorite = (e: React.MouseEvent, gameId: string) => {
     e.stopPropagation();
-    setGames((prev) =>
-      prev.map((g) => (g.id === gameId ? { ...g, isFavorite: !g.isFavorite } : g))
-    );
-  };
-
-  // Tracking Entry Handlers
-  const handleSaveTrack = (entry: UserTrackEntry) => {
-    setUserTracks((prev) => ({
-      ...prev,
-      [entry.gameId]: entry,
-    }));
-  };
-
-  const handleDeleteTrack = (gameId: string) => {
-    setUserTracks((prev) => {
-      const copy = { ...prev };
-      delete copy[gameId];
-      return copy;
+    const isFavorite = !library[gameId]?.isFavorite;
+    const setFavorite = (value: boolean) =>
+      setLibrary((prev) => ({ ...prev, [gameId]: { ...(prev[gameId] ?? newUserGame(gameId)), isFavorite: value } }));
+    // Optimistic, so a second click before the save resolves toggles from the new value.
+    // ponytail: out-of-order responses are last-wins; add a per-game request id if that shows up.
+    setFavorite(isFavorite);
+    persist(gameId, { isFavorite }).catch(() => {
+      setFavorite(!isFavorite);
+      setNotice('Could not update favorites. Please try again.');
     });
   };
 
-  // Filtered & Sorted Games List
-  const filteredAndSortedGames = useMemo(() => {
-    let result = [...games];
-
-    // Sidebar Category (All vs My Games vs Favorites)
-    if (sidebarCategory === 'favorites') {
-      result = result.filter((g) => g.isFavorite);
-    } else if (sidebarCategory === 'my-games') {
-      result = result.filter((g) => Boolean(userTracks[g.id]));
-    }
-
-    // Sidebar Collections / Genres
-    if (selectedGenre) {
-      if (selectedGenre === 'Backlog') {
-        result = result.filter((g) => g.hoursPlayed === 0 || g.lastPlayed === 'Never');
-      } else if (selectedGenre === 'Shooter') {
-        result = result.filter((g) =>
-          g.genres.some((genre) => {
-            const low = genre.toLowerCase();
-            return low.includes('shooter') || low.includes('fps');
-          })
-        );
-      } else {
-        result = result.filter((g) =>
-          g.genres.some((genre) => genre.toLowerCase().includes(selectedGenre.toLowerCase()))
-        );
-      }
-    }
-
-    // Tracking Status quick filter
-    if (activeTrackingFilter) {
-      result = result.filter((g) => userTracks[g.id]?.status === activeTrackingFilter);
-    }
-
-    // FilterBar: Genre
-    if (filterState.genre) {
-      result = result.filter((g) =>
-        g.genres.some((genre) => genre.toLowerCase().includes(filterState.genre.toLowerCase()))
-      );
-    }
-
-    // FilterBar: Release Year
-    if (filterState.year) {
-      if (filterState.year === '2020s') {
-        result = result.filter((g) => g.releaseYear >= 2020);
-      } else if (filterState.year === '2010s') {
-        result = result.filter((g) => g.releaseYear < 2020);
-      } else {
-        const yr = parseInt(filterState.year, 10);
-        result = result.filter((g) => g.releaseYear === yr);
-      }
-    }
-
-    // FilterBar: Platform
-    if (filterState.platform) {
-      result = result.filter((g) => g.format === filterState.platform);
-    }
-
-    // FilterBar: Install Status
-    if (filterState.status) {
-      if (filterState.status === 'INSTALLED') {
-        result = result.filter((g) => g.isInstalled);
-      } else if (filterState.status === 'CLOUD') {
-        result = result.filter((g) => !g.isInstalled);
-      }
-    }
-
-    // Search query
-    if (filterState.search.trim()) {
-      const q = filterState.search.toLowerCase().trim();
-      result = result.filter(
-        (g) =>
-          g.title.toLowerCase().includes(q) ||
-          g.developer.toLowerCase().includes(q) ||
-          g.publisher.toLowerCase().includes(q) ||
-          g.genres.some((genre) => genre.toLowerCase().includes(q))
-      );
-    }
-
-    // Sorting
-    result.sort((a, b) => {
-      if (filterState.sort === 'SCORE_DESC') {
-        return b.averageScore - a.averageScore;
-      }
-      if (filterState.sort === 'HOURS_DESC') {
-        return b.hoursPlayed - a.hoursPlayed;
-      }
-      if (filterState.sort === 'POPULARITY_DESC') {
-        return b.popularity - a.popularity;
-      }
-      if (filterState.sort === 'STORAGE_DESC') {
-        return b.storageGb - a.storageGb;
-      }
-      if (filterState.sort === 'TITLE_ASC') {
-        return a.title.localeCompare(b.title);
-      }
-      if (filterState.sort === 'YEAR_DESC') {
-        return b.releaseYear - a.releaseYear;
-      }
-      return b.averageScore - a.averageScore;
-    });
-
-    return result;
-  }, [
-    games,
-    sidebarCategory,
-    selectedGenre,
-    activeTrackingFilter,
-    filterState,
-    userTracks,
-  ]);
-
-  // Available Genres
-  const availableGenres = useMemo(() => {
-    const set = new Set<string>();
-    games.forEach((g) => g.genres.forEach((genre) => set.add(genre)));
-    return Array.from(set).sort();
-  }, [games]);
-
-  // Metrics
-  const favoriteGames = useMemo(() => games.filter((g) => g.isFavorite), [games]);
-  const myGamesCount = useMemo(
-    () => games.filter((g) => Boolean(userTracks[g.id])).length,
-    [games, userTracks]
+  // Derived data (all logic lives in lib/filters.ts)
+  const filteredAndSortedGames = useMemo(
+    () =>
+      applyFilters(games, library, {
+        category: sidebarCategory,
+        collection: selectedGenre,
+        trackingStatus: activeTrackingFilter,
+        filters: filterState,
+      }),
+    [games, library, sidebarCategory, selectedGenre, activeTrackingFilter, filterState]
   );
-
-  // Tracking status counts for My Games sub-lists
-  const trackingStatusCounts = useMemo(() => {
-    const counts: Record<UserTrackingStatus, number> = {
-      CURRENT: 0,
-      COMPLETED: 0,
-      PAUSED: 0,
-      PLANNING: 0,
-      DROPPED: 0,
-    };
-    Object.values(userTracks).forEach((track) => {
-      if (counts[track.status] !== undefined) {
-        counts[track.status]++;
-      }
-    });
-    return counts;
-  }, [userTracks]);
-
-  // Genre Label Mapping
-  const genreLabelMap: Record<string, string> = {
-    Action: 'Action & Combat',
-    RPG: 'RPGs & Fantasy',
-    'Open World': 'Open World',
-    Shooter: 'Shooters & FPS',
-    'Souls-like': 'Souls-like & Tough',
-    Roguelike: 'Roguelike & Dungeons',
-    Strategy: 'Strategy & 4X',
-    'Sci-Fi': 'Sci-Fi & Cyberpunk',
-    Horror: 'Survival & Horror',
-    Metroidvania: 'Metroidvania & Platformer',
-    Racing: 'Racing & Driving',
-    'Story Rich': 'Story Rich Narrative',
-    Indie: 'Indie Highlights',
-    Backlog: 'Backlog (Unplayed)',
-  };
-
-  // Genre counts for sidebar badges
-  const genreCounts = useMemo(() => {
-    const genresList = [
-      'Action',
-      'RPG',
-      'Open World',
-      'Shooter',
-      'Souls-like',
-      'Roguelike',
-      'Strategy',
-      'Sci-Fi',
-      'Horror',
-      'Metroidvania',
-      'Racing',
-      'Story Rich',
-      'Indie',
-      'Backlog',
-    ];
-
-    const counts: Record<string, number> = {};
-    genresList.forEach((id) => {
-      if (id === 'Backlog') {
-        counts[id] = games.filter((g) => g.hoursPlayed === 0 || g.lastPlayed === 'Never').length;
-      } else if (id === 'Shooter') {
-        counts[id] = games.filter((g) =>
-          g.genres.some((genre) => {
-            const low = genre.toLowerCase();
-            return low.includes('shooter') || low.includes('fps');
-          })
-        ).length;
-      } else {
-        counts[id] = games.filter((g) =>
-          g.genres.some((genre) => genre.toLowerCase().includes(id.toLowerCase()))
-        ).length;
-      }
-    });
-
-    return counts;
-  }, [games]);
+  const availableGenres = useMemo(() => genreOptions(games), [games]);
+  const genreCounts = useMemo(() => countCollections(games, library), [games, library]);
+  const trackingStatusCounts = useMemo(() => countStatuses(games, library), [games, library]);
+  const categoryCounts = useMemo(() => countCategories(games, library), [games, library]);
+  const activeSort = SORT[filterState.sort];
 
   return (
     <div className="min-h-screen text-ink flex flex-col font-sans selection:bg-accent selection:text-canvas">
@@ -366,19 +155,15 @@ export const App: React.FC = () => {
         {/* Left Sidebar */}
         <Sidebar
           currentCategory={sidebarCategory}
-          onSelectCategory={(cat) => {
-            setSidebarCategory(cat);
-            setSelectedGenre(null);
-            setActiveTrackingFilter(null);
-          }}
+          onSelectCategory={showCategory}
           selectedGenre={selectedGenre}
           onSelectGenre={(genre) => {
             setSelectedGenre(genre);
             setActiveTrackingFilter(null);
           }}
-          myGamesCount={myGamesCount}
-          favoritesCount={favoriteGames.length}
-          totalCount={games.length}
+          myGamesCount={categoryCounts['my-games']}
+          favoritesCount={categoryCounts.favorites}
+          totalCount={categoryCounts.all}
           genreCounts={genreCounts}
           activeTrackingFilter={activeTrackingFilter}
           onSelectTrackingFilter={setActiveTrackingFilter}
@@ -387,13 +172,26 @@ export const App: React.FC = () => {
 
         {/* Dynamic Viewport */}
         <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6">
-          {selectedGame ? (
+          {notice && (
+            <div role="alert" className="mb-4 flex items-center justify-between gap-4 rounded-xl border border-rose-400/40 bg-surface px-4 py-3 text-sm text-ink">
+              {notice}
+              <button onClick={() => setNotice(null)} className="text-muted hover:text-ink">
+                Dismiss
+              </button>
+            </div>
+          )}
+
+          {isLoading || loadError ? (
+            <p role={loadError ? 'alert' : 'status'} className="py-20 text-center text-sm text-muted">
+              {loadError ?? 'Loading your library…'}
+            </p>
+          ) : selectedGame ? (
             /* Comprehensive Media Hub */
             <MediaHero
               game={selectedGame}
               onBack={() => setSelectedGame(null)}
               onOpenTrack={() => setTrackingTarget(selectedGame)}
-              currentTrack={userTracks[selectedGame.id]}
+              userGame={library[selectedGame.id]}
             />
           ) : (
             <>
@@ -402,17 +200,7 @@ export const App: React.FC = () => {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-baseline gap-3 min-w-0">
                     <h1 className="text-2xl font-black tracking-tight text-ink truncate">
-                      {selectedGenre
-                        ? genreLabelMap[selectedGenre] || selectedGenre
-                        : sidebarCategory === 'my-games'
-                        ? activeTrackingFilter
-                          ? `My Games — ${STATUS[activeTrackingFilter].label}`
-                          : 'My Games'
-                        : sidebarCategory === 'favorites'
-                        ? 'Favorites'
-                        : activeTrackingFilter
-                        ? STATUS[activeTrackingFilter].label
-                        : 'All Games'}
+                      {pageTitle(sidebarCategory, selectedGenre, activeTrackingFilter)}
                     </h1>
                     <span className="shrink-0 text-sm font-mono text-muted">
                       {filteredAndSortedGames.length} games
@@ -456,11 +244,7 @@ export const App: React.FC = () => {
                     <button
                       key={cat}
                       aria-pressed={sidebarCategory === cat}
-                      onClick={() => {
-                        setSidebarCategory(cat);
-                        setSelectedGenre(null);
-                        setActiveTrackingFilter(null);
-                      }}
+                      onClick={() => showCategory(cat)}
                       className={`shrink-0 text-sm px-3 py-1.5 rounded-xl ${
                         sidebarCategory === cat
                           ? 'bg-elevated text-accent font-semibold'
@@ -496,9 +280,7 @@ export const App: React.FC = () => {
                   <button
                     onClick={() => {
                       setFilterState(DEFAULT_FILTERS);
-                      setSidebarCategory('all');
-                      setSelectedGenre(null);
-                      setActiveTrackingFilter(null);
+                      showCategory('all');
                     }}
                     className="mt-4 text-sm px-4 py-2 rounded-xl font-semibold bg-accent text-canvas hover:bg-accent-hover"
                   >
@@ -509,13 +291,14 @@ export const App: React.FC = () => {
                 /* Management Table View */
                 <GameListView
                   games={filteredAndSortedGames}
+                  library={library}
                   onSelectGame={setSelectedGame}
                   onToggleFavorite={handleToggleFavorite}
-                  sortField={SORT_FIELD[filterState.sort] ?? 'averageScore'}
-                  sortDirection={filterState.sort === 'TITLE_ASC' ? 'asc' : 'desc'}
+                  sortField={activeSort.field}
+                  sortDirection={activeSort.dir}
                   onSortChange={(field) => {
-                    const sort = Object.keys(SORT_FIELD).find((k) => SORT_FIELD[k] === field);
-                    if (sort) setFilterState((prev) => ({ ...prev, sort }));
+                    const sort = SORTS.find((s) => s.field === field);
+                    if (sort) setFilterState((prev) => ({ ...prev, sort: sort.id }));
                   }}
                 />
               ) : sidebarCategory === 'my-games' && activeTrackingFilter === null ? (
@@ -523,7 +306,7 @@ export const App: React.FC = () => {
                 <div className="space-y-10">
                   {STATUSES.map((sec) => {
                     const secGames = filteredAndSortedGames.filter(
-                      (g) => userTracks[g.id]?.status === sec.id
+                      (g) => library[g.id]?.status === sec.id
                     );
                     if (secGames.length === 0) return null;
                     return (
@@ -533,34 +316,23 @@ export const App: React.FC = () => {
                           <h2 className="text-lg font-semibold text-ink">{sec.label}</h2>
                           <span className="text-sm font-mono text-muted">{secGames.length}</span>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-5">
-                          {secGames.map((game) => (
-                            <MediaCard
-                              key={game.id}
-                              game={game}
-                              onSelect={setSelectedGame}
-                              onOpenTrack={() => setTrackingTarget(game)}
-                              trackingStatus={userTracks[game.id]?.status}
-                            />
-                          ))}
-                        </div>
+                        <GameGrid
+                          games={secGames}
+                          library={library}
+                          onSelect={setSelectedGame}
+                          onOpenTrack={setTrackingTarget}
+                        />
                       </section>
                     );
                   })}
                 </div>
               ) : (
-                /* Standardized 2:3 Card Wall */
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-5">
-                  {filteredAndSortedGames.map((game) => (
-                    <MediaCard
-                      key={game.id}
-                      game={game}
-                      onSelect={setSelectedGame}
-                      onOpenTrack={() => setTrackingTarget(game)}
-                      trackingStatus={userTracks[game.id]?.status}
-                    />
-                  ))}
-                </div>
+                <GameGrid
+                  games={filteredAndSortedGames}
+                  library={library}
+                  onSelect={setSelectedGame}
+                  onOpenTrack={setTrackingTarget}
+                />
               )}
             </>
           )}
@@ -570,9 +342,8 @@ export const App: React.FC = () => {
             <TrackingModal
               game={trackingTarget}
               onClose={() => setTrackingTarget(null)}
-              currentEntry={userTracks[trackingTarget.id]}
-              onSave={handleSaveTrack}
-              onDelete={handleDeleteTrack}
+              userGame={library[trackingTarget.id]}
+              onSave={(changes) => persist(trackingTarget.id, changes)}
             />
           )}
         </main>

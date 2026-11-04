@@ -1,42 +1,38 @@
 import React, { useState } from 'react';
 import {
-  BookOpenIcon,
   CaretDownIcon,
   CaretUpIcon,
-  ClockIcon,
-  CompassIcon,
-  CpuIcon,
-  CrosshairIcon,
-  CrownIcon,
-  FireIcon,
   GameControllerIcon,
-  GhostIcon,
-  GlobeHemisphereWestIcon,
   HeartIcon,
-  MapTrifoldIcon,
-  RepeatIcon,
-  SkullIcon,
   StackIcon,
-  SteeringWheelIcon,
-  SwordIcon,
 } from '@phosphor-icons/react';
 import type { FilterCategory, UserTrackingStatus } from '../../types/game';
 import { STATUSES } from '../../lib/status';
+import { COLLECTIONS } from '../../lib/collections';
 
 interface SidebarProps {
+  /** All Games / My Games / Favorites */
   currentCategory: FilterCategory;
   onSelectCategory: (cat: FilterCategory) => void;
+  /** Selected collection id from lib/collections.ts (null = none); the prop name predates collections */
   selectedGenre: string | null;
   onSelectGenre: (genre: string | null) => void;
+  /** Badge counts, computed in lib/filters.ts with the same rules as the list they label */
   myGamesCount: number;
   favoritesCount: number;
   totalCount: number;
   genreCounts?: Record<string, number>;
+  /** Selected status in the My Games sub-list (null = all statuses) */
   activeTrackingFilter?: UserTrackingStatus | null;
   onSelectTrackingFilter?: (status: UserTrackingStatus | null) => void;
   trackingStatusCounts?: Record<UserTrackingStatus, number>;
 }
 
+/**
+ * Left navigation (hidden below md; App shows a compact category switch there instead).
+ * Three blocks: library categories, the My Games status sub-list, and the collections list.
+ * Holds only UI state (which sections are open); the selection itself lives in App.
+ */
 export const Sidebar: React.FC<SidebarProps> = ({
   currentCategory,
   onSelectCategory,
@@ -54,31 +50,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [isSectionOpen, setIsSectionOpen] = useState(true);
   const [isMyGamesOpen, setIsMyGamesOpen] = useState(true);
 
-  const collections = [
-    { id: 'Action', name: 'Action & Combat', icon: FireIcon },
-    { id: 'RPG', name: 'RPGs & Fantasy', icon: SwordIcon },
-    { id: 'Open World', name: 'Open World', icon: GlobeHemisphereWestIcon },
-    { id: 'Shooter', name: 'Shooters & FPS', icon: CrosshairIcon },
-    { id: 'Souls-like', name: 'Souls-like & Tough', icon: SkullIcon },
-    { id: 'Roguelike', name: 'Roguelike & Dungeons', icon: RepeatIcon },
-    { id: 'Strategy', name: 'Strategy & 4X', icon: CrownIcon },
-    { id: 'Sci-Fi', name: 'Sci-Fi & Cyberpunk', icon: CpuIcon },
-    { id: 'Horror', name: 'Survival & Horror', icon: GhostIcon },
-    { id: 'Metroidvania', name: 'Metroidvania & Platformer', icon: MapTrifoldIcon },
-    { id: 'Racing', name: 'Racing & Driving', icon: SteeringWheelIcon },
-    { id: 'Story Rich', name: 'Story Rich Narrative', icon: BookOpenIcon },
-    { id: 'Indie', name: 'Indie Highlights', icon: CompassIcon },
-    { id: 'Backlog', name: 'Backlog (Unplayed)', icon: ClockIcon },
-  ];
-
+  // Collections shown before "Show More"; the list auto-expands if the selected one is hidden.
   const INITIAL_VISIBLE_COUNT = 5;
   const isSelectedBeyondInitial =
     selectedGenre !== null &&
-    collections.findIndex((c) => c.id === selectedGenre) >= INITIAL_VISIBLE_COUNT;
+    COLLECTIONS.findIndex((c) => c.id === selectedGenre) >= INITIAL_VISIBLE_COUNT;
 
-  // Auto-extend if selected genre is further down
   const showAll = isExtended || isSelectedBeyondInitial;
-  const visibleCollections = showAll ? collections : collections.slice(0, INITIAL_VISIBLE_COUNT);
+  const visibleCollections = showAll ? COLLECTIONS : COLLECTIONS.slice(0, INITIAL_VISIBLE_COUNT);
 
   const handleCategoryClick = (cat: FilterCategory) => {
     onSelectCategory(cat);
@@ -260,7 +239,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       <Icon weight={isActive ? 'fill' : 'regular'} className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-muted'}`} />
-                      <span className="truncate">{col.name}</span>
+                      <span className="truncate">{col.label}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {typeof count === 'number' && (
@@ -291,7 +270,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </>
                 ) : (
                   <>
-                    <span>Show More ({collections.length - INITIAL_VISIBLE_COUNT} more)</span>
+                    <span>Show More ({COLLECTIONS.length - INITIAL_VISIBLE_COUNT} more)</span>
                     <CaretDownIcon className="w-3.5 h-3.5" />
                   </>
                 )}

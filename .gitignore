@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets: real credentials never get committed (.env.example with empty values is fine)
+.env
+.env.*
+!.env.example

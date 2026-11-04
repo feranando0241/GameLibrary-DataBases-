@@ -5,20 +5,28 @@ import {
   ArrowsDownUpIcon,
   HeartIcon,
 } from '@phosphor-icons/react';
-import type { Game, SortField, SortDirection } from '../../types/game';
+import type { Game, Library, SortField, SortDirection } from '../../types/game';
 import { Button } from '../ui/Button';
 
 interface GameListViewProps {
   games: Game[];
+  library: Library;
   onSelectGame: (game: Game) => void;
   onToggleFavorite: (e: React.MouseEvent, gameId: string) => void;
+  /** Active sort, shown as an arrow on its column header */
   sortField: SortField;
   sortDirection: SortDirection;
+  /** Called when a sortable header is clicked; App maps it to a SORTS entry */
   onSortChange: (field: SortField) => void;
 }
 
+/**
+ * Table view of the library (the alternative to GameGrid): one row per game with favorite toggle,
+ * score, platform, hours and popularity. Sorting is not done here; headers only report clicks.
+ */
 export const GameListView: React.FC<GameListViewProps> = ({
   games,
+  library,
   onSelectGame,
   onToggleFavorite,
   sortField,
@@ -79,7 +87,10 @@ export const GameListView: React.FC<GameListViewProps> = ({
 
           {/* Table Body */}
           <tbody className="divide-y divide-line/60 text-xs">
-            {games.map((game) => (
+            {games.map((game) => {
+              const isFavorite = Boolean(library[game.id]?.isFavorite);
+              const hours = library[game.id]?.hoursPlayed ?? 0;
+              return (
               <tr
                 key={game.id}
                 onClick={() => onSelectGame(game)}
@@ -93,12 +104,12 @@ export const GameListView: React.FC<GameListViewProps> = ({
                   <button
                     onClick={(e) => onToggleFavorite(e, game.id)}
                     className="p-1 rounded-lg text-muted hover:text-rose-400 transition-colors outline-none focus:ring-2 focus:ring-accent"
-                    aria-label={game.isFavorite ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
-                    aria-pressed={game.isFavorite}
+                    aria-label={isFavorite ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
+                    aria-pressed={isFavorite}
                   >
                     <HeartIcon
-                      weight={game.isFavorite ? 'fill' : 'regular'}
-                      className={`w-4 h-4 ${game.isFavorite ? 'text-rose-500' : ''}`}
+                      weight={isFavorite ? 'fill' : 'regular'}
+                      className={`w-4 h-4 ${isFavorite ? 'text-rose-500' : ''}`}
                     />
                   </button>
                 </td>
@@ -138,9 +149,9 @@ export const GameListView: React.FC<GameListViewProps> = ({
 
                 {/* Hours Logged */}
                 <td className="py-3 px-4 text-right font-mono text-ink">
-                  {game.hoursPlayed > 0 ? (
+                  {hours > 0 ? (
                     <span className="font-bold text-ink">
-                      {game.hoursPlayed.toFixed(1)} hrs
+                      {hours.toFixed(1)} hrs
                     </span>
                   ) : (
                     <span className="text-muted">--</span>
@@ -170,7 +181,8 @@ export const GameListView: React.FC<GameListViewProps> = ({
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
