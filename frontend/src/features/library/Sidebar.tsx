@@ -6,9 +6,9 @@ import {
   HeartIcon,
   StackIcon,
 } from '@phosphor-icons/react';
-import type { FilterCategory, UserTrackingStatus } from '../../types/game';
-import { STATUSES } from '../../lib/status';
-import { COLLECTIONS } from '../../lib/collections';
+import type { FilterCategory, UserTrackingStatus } from '../../shared/domain/game';
+import { STATUSES } from '../../shared/domain/status';
+import { COLLECTIONS } from './collections';
 
 interface SidebarProps {
   /** All Games / My Games / Favorites */

@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Game, Library } from '../../types/game';
-import { MediaCard } from '../discover/MediaCard';
+import type { Game, Library } from '../../shared/domain/game';
+import { MediaCard } from './MediaCard';
 
 interface GameGridProps {
   games: Game[];

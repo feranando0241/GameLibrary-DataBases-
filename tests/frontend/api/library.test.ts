@@ -1,7 +1,7 @@
-// Data-access contract (src/lib/api.ts). The phase-3 fetch implementation must keep passing these.
+// Data-access contract (frontend/src/shared/api/api.ts). The phase-3 fetch implementation must keep passing these.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { getGames, getLibrary, newUserGame, saveUserGame } from '../../src/lib/api.ts';
+import { getGames, getLibrary, newUserGame, saveUserGame } from '../../../frontend/src/shared/api/api.ts';
 
 test('saving a row returns it and later reads see it (single source for hours, review H2)', async () => {
   const [game] = await getGames();

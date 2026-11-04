@@ -1,4 +1,4 @@
-// applyFilters (src/lib/filters.ts): the library's WHERE + ORDER BY.
+// applyFilters (frontend/src/features/library/filters.ts): the library's WHERE + ORDER BY.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ids } from '../fixtures.ts';

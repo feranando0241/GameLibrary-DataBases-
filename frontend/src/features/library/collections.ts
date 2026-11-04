@@ -15,7 +15,7 @@ import {
   SwordIcon,
   type Icon,
 } from '@phosphor-icons/react';
-import type { Game, UserGame } from '../types/game';
+import type { Game, UserGame } from '../../shared/domain/game';
 
 /** True when any of the game's genres contains `term` (case-insensitive). */
 export const hasGenre = (game: Game, term: string) =>

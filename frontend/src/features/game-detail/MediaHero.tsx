@@ -8,9 +8,9 @@ import {
   TrendUpIcon,
   TrophyIcon,
 } from '@phosphor-icons/react';
-import type { Game, UserGame } from '../../types/game';
-import { STATUS } from '../../lib/status';
-import { Button } from '../ui/Button';
+import type { Game, UserGame } from '../../shared/domain/game';
+import { STATUS } from '../../shared/domain/status';
+import { Button } from '../../shared/ui/Button';
 
 interface MediaHeroProps {
   game: Game;

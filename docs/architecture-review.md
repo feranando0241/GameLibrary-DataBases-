@@ -4,6 +4,8 @@
 **Scope:** frontend on branch `Testing-Frontend` (commit `9c8cf74`)
 **Related:** [ADR-0001: Database engine and data-access layer](adr/0001-database-and-data-access-layer.md)
 
+> Snapshot of the code at `9c8cf74`. File paths below refer to that layout; the current modular structure is in [architecture.md](architecture.md).
+
 ---
 
 ## 1. Executive summary
@@ -163,7 +165,7 @@ Each phase leaves the app working and can be merged on its own.
 | **0. Safety net** | Catch breakage before merging | CI (lint + build), `main` branch protection, explicit `strict`, corrected README | No |
 | **1. Refactor without changing behavior** | Make the logic testable and defined once | `applyFilters` and counts in `lib/` with tests, `collections.ts`, typed filters | No |
 | **2. Data seam** | Decouple the UI from the data source | `src/lib/api.ts` over the mocks, seed data out of `App.tsx`, hours and favorites unified (fixes H2) | Yes: the modal now updates the visible hours |
-| **3. Database** | Real persistence | Per ADR-0001: MySQL, `server/` (Express + `mysql2`), `db/migrations/001_init.sql`, `db/seed.sql`, endpoints. `api.ts` switches from mocks to `fetch` | Yes: data persists |
+| **3. Database** | Real persistence | Per ADR-0001: MySQL, `backend/` (Express + `mysql2`), `database/migrations/`, seeds, endpoints. `api.ts` switches from mocks to `fetch` | Yes: data persists |
 | **4. Scale** | Grow catalog and users | Server-side filtering, URLs per view, authentication (its own ADR) | Yes |
 
 Phases 0 and 1 are small and low-risk. They are worth doing **before** connecting the database, so the migration happens with tests and CI already in place.

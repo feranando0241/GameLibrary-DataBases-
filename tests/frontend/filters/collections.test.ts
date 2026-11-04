@@ -1,10 +1,10 @@
-// Sidebar collections (src/lib/collections.ts) and their badge counts (src/lib/filters.ts).
+// Sidebar collections (frontend/src/features/library/collections.ts) and their badge counts (filters.ts).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { COLLECTIONS } from '../../src/lib/collections.ts';
-import { countCategories, countCollections, countStatuses } from '../../src/lib/filters.ts';
+import { COLLECTIONS } from '../../../frontend/src/features/library/collections.ts';
+import { countCategories, countCollections, countStatuses } from '../../../frontend/src/features/library/filters.ts';
 import { games, ids, library } from '../fixtures.ts';
-import { newUserGame } from '../../src/lib/api.ts';
+import { newUserGame } from '../../../frontend/src/shared/api/api.ts';
 
 test('special collections: Shooter includes FPS, Backlog means unplayed', () => {
   assert.deepEqual(ids({ collection: 'Shooter' }), ['doom', 'halo']);

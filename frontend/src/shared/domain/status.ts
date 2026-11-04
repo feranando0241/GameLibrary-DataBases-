@@ -6,7 +6,7 @@ import {
   XIcon,
   type Icon,
 } from '@phosphor-icons/react';
-import type { UserTrackingStatus } from '../types/game';
+import type { UserTrackingStatus } from './game';
 
 /**
  * Single source for how a tracking status looks and reads. Order = display order.

@@ -1,6 +1,6 @@
-import type { Game, Library, UserGame } from '../types/game';
-import { mockGames } from '../data/mockGames.ts';
-import { mockLibrary } from '../data/mockLibrary.ts';
+import type { Game, Library, UserGame } from '../domain/game';
+import { mockGames } from './mocks/mockGames.ts';
+import { mockLibrary } from './mocks/mockLibrary.ts';
 
 /**
  * The only module that knows where data comes from (ADR-0001).

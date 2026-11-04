@@ -1,10 +1,10 @@
 import type { Config } from 'tailwindcss';
 
-// Colors read the CSS variables in src/index.css — change a token there, not here.
+// Colors read the CSS variables in frontend/src/index.css — change a token there, not here.
 const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
 
 export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./frontend/index.html', './frontend/src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       fontFamily: {

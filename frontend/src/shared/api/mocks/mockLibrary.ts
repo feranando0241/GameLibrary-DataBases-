@@ -1,4 +1,4 @@
-import type { Library } from '../types/game';
+import type { Library } from '../../domain/game';
 
 /** The demo user's `user_games` rows, keyed by game id. */
 export const mockLibrary: Library = {

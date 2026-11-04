@@ -68,7 +68,7 @@ test('no env files, private keys or database files are published', () => {
 });
 
 test('.env files are git-ignored everywhere, .env.example is not', () => {
-  for (const path of ['.env', '.env.local', '.env.production', 'server/.env']) {
+  for (const path of ['.env', '.env.local', '.env.production', 'backend/.env', 'database/.env']) {
     assert.ok(isIgnored(path), `${path} must be git-ignored`);
   }
   assert.ok(!isIgnored('.env.example'), '.env.example must stay committable');
@@ -97,10 +97,10 @@ test('browser code cannot reach server secrets', () => {
   const exposed = textFiles.filter(({ content }) => /\bVITE_[A-Z0-9_]*(PASSWORD|SECRET|TOKEN|KEY)/.test(content));
   assert.deepEqual(exposed.map((f) => f.path), []);
 
-  // src/ is the browser bundle: no DB driver, no server env, no imports from server/.
+  // frontend/ is the browser bundle: no DB driver, no server env, no imports from backend/ or database/.
   const leaks = textFiles
-    .filter(({ path }) => path.startsWith('src/'))
-    .filter(({ content }) => /process\.env|\bDB_[A-Z]+\b|['"]mysql2|from ['"][./]*server\//.test(content))
+    .filter(({ path }) => path.startsWith('frontend/'))
+    .filter(({ content }) => /process\.env|\bDB_[A-Z]+\b|['"]mysql2|from ['"][./]*(backend|database)\//.test(content))
     .map((f) => f.path);
   assert.deepEqual(leaks, []);
 });

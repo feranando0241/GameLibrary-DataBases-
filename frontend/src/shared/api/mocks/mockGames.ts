@@ -1,4 +1,4 @@
-import type { Game } from '../types/game';
+import type { Game } from '../../domain/game';
 
 /** Catalog seed. Mirrors the `games` table (+ genres and `game_stats`). */
 export const mockGames: Game[] = [

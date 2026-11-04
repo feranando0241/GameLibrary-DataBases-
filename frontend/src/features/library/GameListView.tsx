@@ -5,8 +5,8 @@ import {
   ArrowsDownUpIcon,
   HeartIcon,
 } from '@phosphor-icons/react';
-import type { Game, Library, SortField, SortDirection } from '../../types/game';
-import { Button } from '../ui/Button';
+import type { Game, Library, SortField, SortDirection } from '../../shared/domain/game';
+import { Button } from '../../shared/ui/Button';
 
 interface GameListViewProps {
   games: Game[];

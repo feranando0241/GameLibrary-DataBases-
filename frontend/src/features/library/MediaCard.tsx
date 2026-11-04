@@ -3,8 +3,8 @@ import {
   CheckIcon,
   PlusIcon,
 } from '@phosphor-icons/react';
-import type { Game, UserGame } from '../../types/game';
-import { STATUS } from '../../lib/status';
+import type { Game, UserGame } from '../../shared/domain/game';
+import { STATUS } from '../../shared/domain/status';
 
 interface MediaCardProps {
   game: Game;

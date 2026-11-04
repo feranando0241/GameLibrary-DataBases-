@@ -4,29 +4,29 @@ import {
   ListIcon,
   SquaresFourIcon,
 } from '@phosphor-icons/react';
-import type { Game, FilterCategory, Library, UserGame, UserTrackingStatus } from './types/game';
-import { STATUS, STATUSES } from './lib/status';
-import { COLLECTION } from './lib/collections';
+import type { Game, FilterCategory, Library, UserGame, UserTrackingStatus } from '../shared/domain/game';
+import { STATUS, STATUSES } from '../shared/domain/status';
+import { getGames, getLibrary, newUserGame, saveUserGame } from '../shared/api/api';
 import {
+  COLLECTION,
   DEFAULT_FILTERS,
+  FilterBar,
+  GameGrid,
+  GameListView,
   SORT,
   SORTS,
+  Sidebar,
   applyFilters,
   countCategories,
   countCollections,
   countStatuses,
   genreOptions,
   type FilterBarState,
-} from './lib/filters';
-import { getGames, getLibrary, newUserGame, saveUserGame } from './lib/api';
-import { TopBar } from './components/layout/TopBar';
-import { Sidebar } from './components/layout/Sidebar';
-import { FilterBar } from './components/discover/FilterBar';
-import { MediaHero } from './components/media-detail/MediaHero';
-import { TrackingModal } from './components/tracker/TrackingModal';
-import { GameListView } from './components/library/GameListView';
-import { GameGrid } from './components/library/GameGrid';
-import { PixelWaves } from './components/layout/PixelWaves';
+} from '../features/library';
+import { MediaHero } from '../features/game-detail';
+import { TrackingModal } from '../features/tracking';
+import { TopBar } from './TopBar';
+import { PixelWaves } from './PixelWaves';
 
 /** Page heading for the current sidebar selection. */
 function pageTitle(

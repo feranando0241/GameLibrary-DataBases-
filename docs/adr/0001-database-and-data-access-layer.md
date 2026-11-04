@@ -16,8 +16,8 @@
 ## Decision
 
 1. **MySQL 8.0.19 or later** with InnoDB (the default engine). 8.0.16+ is needed so `CHECK` constraints are enforced, and 8.0.19+ for the `INSERT … AS new ON DUPLICATE KEY UPDATE` alias syntax. Keep the default strict `sql_mode` so invalid values raise errors instead of being silently truncated.
-2. A **thin Node + Express API** in `server/` that runs plain SQL through the **`mysql2`** driver (promise API, `pool.execute()` with `?` placeholders). No ORM. Vite proxies `/api` to it in development.
-3. A **single data-access module on the frontend** (`src/lib/api.ts`). Components and `App.tsx` call only this module and never import `mockGames` directly. The module first wraps the mocks, then switches to `fetch('/api/...')` without the UI changing.
+2. A **thin Node + Express API** in `backend/` that runs plain SQL through the **`mysql2`** driver (promise API, `pool.execute()` with `?` placeholders). No ORM. Vite proxies `/api` to it in development.
+3. A **single data-access module on the frontend** (`frontend/src/shared/api/api.ts`). Components and `App.tsx` call only this module and never import `mockGames` directly. The module first wraps the mocks, then switches to `fetch('/api/...')` without the UI changing.
 4. **Normalize the model.** The current `Game` type becomes a catalog row plus a per-user row, and the frontend type is assembled from the two by a query or view.
 5. **Credentials come from environment variables** (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`) loaded from a `.env` file that is git-ignored. A committed `.env.example` lists the variable names without values.
 
@@ -147,7 +147,7 @@ _Dismissed:_ connecting from the browser directly to MySQL. It would expose cred
 
 The main tension is **type safety and convenience (B, C) vs. visible SQL we control (A)**. In a databases course the schema and queries are the deliverable, so A wins. The filter set is small, so building the `WHERE` clause by hand with placeholders stays manageable. If filtering grows much more complex, revisit Option C.
 
-The frontend seam (`src/lib/api.ts`) is the part that matters most for long-term stability. It does not depend on the driver choice, and if it lands first, the backend can change without touching components.
+The frontend seam (`frontend/src/shared/api/api.ts`) is the part that matters most for long-term stability. It does not depend on the driver choice, and if it lands first, the backend can change without touching components.
 
 ## Consequences
 
@@ -158,10 +158,11 @@ The frontend seam (`src/lib/api.ts`) is the part that matters most for long-term
 ## Action items
 
 1. [x] Choose the DBMS: MySQL.
-2. [x] Create `src/lib/api.ts` backed by the mocks, and route `App.tsx` reads and mutations through it (no database yet).
-3. [x] Split `Game` (catalog) from `UserGame` (one `user_games` row) in `src/types/game.ts`.
-4. [ ] Add `db/migrations/001_init.sql` (the schema above) and `db/seed.sql` generated from `mockGames.ts` + `mockLibrary.ts`.
-5. [ ] Add `server/` (Express + `mysql2` pool with `decimalNumbers: true`), `.env.example`, and `.env` in `.gitignore`.
-6. [ ] Endpoints, one per `api.ts` function: `GET /api/games`, `GET /api/me/games`, `PUT /api/me/games/:gameId` (upserts the whole row; "Stop Tracking" sets `status`, `score`, `notes` to NULL and keeps hours and favorite). `src/lib/api.test.ts` is the contract they must keep.
+2. [x] Create the frontend `api.ts` backed by the mocks, and route `App.tsx` reads and mutations through it (no database yet).
+3. [x] Split `Game` (catalog) from `UserGame` (one `user_games` row) in `frontend/src/shared/domain/game.ts`.
+4. [x] Add `database/migrations/001_init.sql` (the schema above), tested by `tests/database/`.
+4b. [ ] Add `database/seeds/` generated from `mockGames.ts` + `mockLibrary.ts`.
+5. [ ] Add `backend/` (Express + `mysql2` pool with `decimalNumbers: true`) and `.env.example`. (`.env` is already git-ignored and guarded by `tests/security/`.)
+6. [ ] Endpoints, one per `api.ts` function: `GET /api/games`, `GET /api/me/games`, `PATCH /api/me/games/:gameId` (merges the sent fields into the row with an upsert; "Stop Tracking" sets `status`, `score`, `notes` to NULL and keeps hours and favorite). `tests/frontend/api/` is the contract they must keep.
 7. [ ] Add the Vite `/api` proxy, then switch `api.ts` from mocks to `fetch`.
 8. [ ] Follow-up ADR: authentication / multi-user.

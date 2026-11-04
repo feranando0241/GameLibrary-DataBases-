@@ -8,9 +8,9 @@ import type {
   SortField,
   UserGame,
   UserTrackingStatus,
-} from '../types/game';
+} from '../../shared/domain/game';
 import { COLLECTION, COLLECTIONS, hasGenre } from './collections.ts';
-import { STATUSES } from './status.ts';
+import { STATUSES } from '../../shared/domain/status.ts';
 
 /** Sort options. Order = dropdown order. `field`/`dir` also drive the list view's column headers. */
 export const SORTS = [

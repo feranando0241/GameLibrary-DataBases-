@@ -6,9 +6,9 @@ import {
   TrashIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import type { Game, UserGame, UserTrackingStatus } from '../../types/game';
-import { STATUSES } from '../../lib/status';
-import { Button } from '../ui/Button';
+import type { Game, UserGame, UserTrackingStatus } from '../../shared/domain/game';
+import { STATUSES } from '../../shared/domain/status';
+import { Button } from '../../shared/ui/Button';
 
 interface TrackingModalProps {
   game: Game;

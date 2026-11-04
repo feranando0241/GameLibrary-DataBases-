@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react';
-import { DEFAULT_FILTERS, SORTS, YEARS, type FilterBarState } from '../../lib/filters';
-import { STATUSES } from '../../lib/status';
-import { GAME_FORMATS, type UserTrackingStatus } from '../../types/game';
+import { DEFAULT_FILTERS, SORTS, YEARS, type FilterBarState } from './filters';
+import { STATUSES } from '../../shared/domain/status';
+import { GAME_FORMATS, type UserTrackingStatus } from '../../shared/domain/game';
 
 interface FilterBarProps {
   filters: FilterBarState;

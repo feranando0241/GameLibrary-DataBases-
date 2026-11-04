@@ -1,7 +1,7 @@
 // Shared test data. Small and hand-written so every expected result can be checked by eye.
-import type { Game, Library } from '../src/types/game';
-import { newUserGame } from '../src/lib/api.ts';
-import { DEFAULT_FILTERS, applyFilters, type LibraryQuery } from '../src/lib/filters.ts';
+import type { Game, Library } from '../../frontend/src/shared/domain/game';
+import { newUserGame } from '../../frontend/src/shared/api/api.ts';
+import { DEFAULT_FILTERS, applyFilters, type LibraryQuery } from '../../frontend/src/features/library/filters.ts';
 
 export const game = (id: string, over: Partial<Game> = {}): Game => ({
   id,

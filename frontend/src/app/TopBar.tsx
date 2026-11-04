@@ -11,7 +11,7 @@ import {
   XIcon,
 } from '@phosphor-icons/react';
 
-import { GeekbondLogo } from '../ui/GeekbondLogo';
+import { GeekbondLogo } from '../shared/ui/GeekbondLogo';
 
 // Picks the shortcut hint shown in the search box (⌘K vs Ctrl+K); App handles both keys.
 const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform);
