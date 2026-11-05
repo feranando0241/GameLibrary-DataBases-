@@ -43,3 +43,25 @@ npm run dev
 # Production build
 npm run build
 ```
+
+### 3. Running with the real backend
+
+The API lives in `backend/` (Express + `mysql2`). In development Vite proxies `/api` to the API, so the frontend uses relative URLs and the browser needs no CORS.
+
+```bash
+# 1. Start MySQL and apply database/migrations + database/seeds (see backend/README.md)
+# 2. Configure the connection
+cp backend/.env.example backend/.env
+
+# Terminal A — API on http://localhost:3000
+npm run api
+
+# Terminal B — frontend on http://localhost:5173
+npm run dev
+```
+
+Full verification (backend typecheck, lint, all tests, production build):
+
+```bash
+npm run verify
+```
