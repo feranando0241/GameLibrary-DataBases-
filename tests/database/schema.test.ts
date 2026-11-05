@@ -55,7 +55,8 @@ test('migrations are numbered and apply cleanly in order', { skip }, () => {
 });
 
 test('every table and view the app uses exists', { skip }, () => {
-  const tables = sql('SHOW TABLES').split('\n').sort();
+  // The Windows `mysql` client ends lines with CRLF; split on either ending.
+  const tables = sql('SHOW TABLES').split(/\r?\n/).sort();
   assert.deepEqual(tables, ['game_genres', 'game_stats', 'games', 'genres', 'user_games', 'users']);
 });
 
