@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Local database dumps: they contain user data and are never committed
+database/backups/

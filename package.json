@@ -8,14 +8,20 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "api": "node backend/index.ts",
+    "typecheck:backend": "tsc -p backend/tsconfig.json",
+    "verify": "npm run typecheck:backend && npm run lint && npm test && npm run build",
     "test": "node --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
+    "express": "^5.3.0",
+    "mysql2": "^3.24.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
