@@ -10,8 +10,13 @@
     "preview": "vite preview",
     "api": "node backend/index.ts",
     "typecheck:backend": "tsc -p backend/tsconfig.json",
-    "verify": "npm run typecheck:backend && npm run lint && npm test && npm run build",
-    "test": "node --test \"tests/**/*.test.ts\""
+    "typecheck:database": "tsc -p database/tsconfig.json",
+    "verify": "npm run typecheck:backend && npm run typecheck:database && npm run lint && npm test && npm run build",
+    "test": "node --test \"tests/**/*.test.ts\"",
+    "db:status": "node database/cli.ts status",
+    "db:migrate": "node database/cli.ts migrate",
+    "db:seed": "node database/cli.ts seed",
+    "db:import-rawg": "node database/import-rawg.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

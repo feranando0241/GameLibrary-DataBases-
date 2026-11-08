@@ -26,7 +26,8 @@ export const pool: Pool = createPool({
   password: DB_PASSWORD,
   database: DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
+  // The class server allows 2 connections per student account, so keep this low there (DB_CONNECTION_LIMIT=1).
+  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT) || 10,
   // ADR-0001: DECIMAL arrives as a number, and DATETIME as text we format as ISO UTC ourselves.
   decimalNumbers: true,
   dateStrings: true,

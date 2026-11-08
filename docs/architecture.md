@@ -85,23 +85,35 @@ flowchart TB
 
 ## 3. Data model
 
+Migrations `001_init.sql` and `002_normalization.sql`. Normalization notes: [database/README.md](../database/README.md#data-model-and-normalization).
+
 ```mermaid
 erDiagram
   USERS ||--o{ USER_GAMES : tracks
   GAMES ||--o{ USER_GAMES : "tracked by"
+  USER_GAMES ||--o| REVIEWS : "reviewed in"
+  COMPANIES ||--o{ GAMES : "develops / publishes"
   GAMES ||--o{ GAME_GENRES : has
   GENRES ||--o{ GAME_GENRES : groups
+  GAMES ||--o{ GAME_PLATFORMS : "ships on"
+  PLATFORMS ||--o{ GAME_PLATFORMS : hosts
 
   USERS {
     int id PK "AUTO_INCREMENT"
     varchar username UK
+    varchar email UK "NULL until sign-up; CHECK looks like an address"
+    varchar password_hash "bcrypt/argon2 hash, never plain text"
     datetime created_at
   }
+  COMPANIES {
+    int id PK "AUTO_INCREMENT"
+    varchar name UK
+  }
   GAMES {
-    varchar id PK "slug, e.g. elden-ring"
+    varchar id PK "slug, e.g. elden-ring (same as RAWG)"
     varchar title
-    varchar developer
-    varchar publisher
+    int developer_id FK "companies.id, RESTRICT"
+    int publisher_id FK "companies.id, RESTRICT"
     smallint release_year "indexed"
     enum format "PC, PS5, Xbox, Switch, Steam Deck; indexed"
     varchar cover_url
@@ -118,6 +130,14 @@ erDiagram
     varchar game_id PK,FK
     int genre_id PK,FK
   }
+  PLATFORMS {
+    int id PK "AUTO_INCREMENT"
+    varchar name UK
+  }
+  GAME_PLATFORMS {
+    varchar game_id PK,FK
+    int platform_id PK,FK
+  }
   USER_GAMES {
     int user_id PK,FK
     varchar game_id PK,FK
@@ -131,9 +151,16 @@ erDiagram
     datetime last_played_at "UTC; NULL = never played"
     datetime updated_at "ON UPDATE CURRENT_TIMESTAMP"
   }
+  REVIEWS {
+    int user_id PK,FK "(user_id, game_id) → user_games, CASCADE"
+    varchar game_id PK,FK
+    text body "CHECK 1..5000 chars after trim"
+    datetime created_at
+    datetime updated_at
+  }
 ```
 
-`average_score` and `popularity` are not stored. The `game_stats` view computes them from `user_games`.
+`average_score`, `popularity` and `review_count` are not stored. The `game_stats` view computes them from `user_games` and `reviews`. The `game_catalog` view joins `games` to company names, and `GET /api/games` reads it.
 
 ## 4. Example flow: saving a tracking entry
 
