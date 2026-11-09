@@ -26,7 +26,7 @@ The downloads popover and the user profile in the top bar are placeholders with 
 | UI | React 19, TypeScript, Tailwind CSS 3, Phosphor Icons | Working |
 | Build and dev server | Vite 8 | Working |
 | Linting and tests | oxlint, Node's built-in test runner | Working |
-| Database | MySQL 8.0.19+ with hand-written SQL | Schema + seed ready |
+| Database | MySQL 8.0.19+ with hand-written SQL, game data from RAWG | Schema, seeds, and migration tool ready |
 | API | Node, Express, `mysql2` | Working |
 
 We write the SQL by hand instead of using an ORM because the schema and queries are the core of this course project. [ADR-0001](docs/adr/0001-database-and-data-access-layer.md) explains that decision.
@@ -61,17 +61,21 @@ Vite prints the local URL, usually <http://localhost:5173>.
 | `npm test` | Runs all the tests |
 | `npm run api` | Starts the Express API on <http://localhost:3000> |
 | `npm run typecheck:backend` | Type-checks the backend |
-| `npm run verify` | Backend typecheck, lint, all tests, and production build |
+| `npm run verify` | Backend and database typecheck, lint, all tests, and production build |
+| `npm run db:status` / `db:migrate` / `db:seed` | Check, migrate, or seed the database in `backend/.env` |
+| `npm run db:import-rawg` | Downloads real games from RAWG into `database/seeds/002_rawg_games.sql` |
 
 ### Database
 
-Apply the schema and the demo seed (generated from the frontend mocks):
+The group works in one **shared database** on the class MySQL server. Its name is the group name, or the group name followed by `-01`. Put its connection details in `backend/.env` (copied from `backend/.env.example`), then run:
 
 ```bash
-mysql -u root -e "CREATE DATABASE geekbond"
-mysql -u root geekbond < database/migrations/001_init.sql
-mysql -u root geekbond < database/seeds/001_seed.sql
+npm run db:status    # shows the server, user and database you're connected to; every teammate should see the same
+npm run db:migrate   # one person: applies migrations not applied yet
+npm run db:seed      # one person: loads demo data, and real games from RAWG if imported (safe to re-run)
 ```
+
+To load real game data from the RAWG API, use `npm run db:import-rawg`. Setup, shared-database rules, and the normalization notes are in [database/README.md](database/README.md). **Teammates:** [database/TEAM_README.md](database/TEAM_README.md) explains how to connect to our shared database `G1` and what each person needs to do.
 
 The API reads its connection from environment variables (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`). Copy `backend/.env.example` to `backend/.env` and fill in your values; `backend/.env` is git-ignored. The frontend calls the API through the Vite proxy, so both processes must be running.
 
@@ -102,11 +106,15 @@ Tests in `tests/architecture/` enforce this boundary and the other import rules,
 
 | Table | Holds |
 |-------|-------|
-| `users` | User accounts |
-| `games` | The catalog: title, developer, year, platform, and so on |
+| `users` | User accounts: username, email, password hash |
+| `companies` | Developers and publishers, each stored once |
+| `games` | The catalog: title, developer and publisher (ids into `companies`), year, format, and so on |
 | `genres`, `game_genres` | Genres and the many-to-many link to games |
+| `platforms`, `game_platforms` | Every platform a game ships on (many-to-many) |
 | `user_games` | One user's data for one game: status, score, hours, favorite, notes |
-| `game_stats` (view) | Average score and popularity, computed from `user_games` |
+| `reviews` | A user's written review of a game in their library |
+| `game_catalog` (view) | Games with developer and publisher names, read by the API |
+| `game_stats` (view) | Average score, popularity, and review count, computed from `user_games` and `reviews` |
 
 The full diagram is in [docs/architecture.md](docs/architecture.md#3-data-model).
 

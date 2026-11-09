@@ -40,8 +40,9 @@ before(() => {
   for (const file of migrations) sql(readFileSync(join(migrationsDir, file), 'utf8'));
   sql(`
     INSERT INTO users (username) VALUES ('demo');
-    INSERT INTO games (id, title, developer, publisher, release_year, format)
-    VALUES ('g1', 'Game One', 'Dev', 'Pub', 2023, 'PC'), ('g2', 'Game Two', 'Dev', 'Pub', 2024, 'Steam Deck');
+    INSERT INTO companies (id, name) VALUES (1, 'Dev'), (2, 'Pub');
+    INSERT INTO games (id, title, developer_id, publisher_id, release_year, format)
+    VALUES ('g1', 'Game One', 1, 2, 2023, 'PC'), ('g2', 'Game Two', 1, 2, 2024, 'Steam Deck');
   `);
 });
 
@@ -57,7 +58,10 @@ test('migrations are numbered and apply cleanly in order', { skip }, () => {
 test('every table and view the app uses exists', { skip }, () => {
   // The Windows `mysql` client ends lines with CRLF; split on either ending.
   const tables = sql('SHOW TABLES').split(/\r?\n/).sort();
-  assert.deepEqual(tables, ['game_genres', 'game_stats', 'games', 'genres', 'user_games', 'users']);
+  assert.deepEqual(tables, [
+    'companies', 'game_catalog', 'game_genres', 'game_platforms', 'game_stats', 'games',
+    'genres', 'platforms', 'reviews', 'user_games', 'users',
+  ]);
 });
 
 test('upsert (the PATCH /api/me/games/:gameId query) inserts, then updates the same row', { skip }, () => {
@@ -73,7 +77,7 @@ test('constraints reject invalid data instead of storing it', { skip }, () => {
   rejects(`INSERT INTO user_games (user_id, game_id, score) VALUES (1, 'g2', 150)`, /Check constraint/i);
   rejects(`INSERT INTO user_games (user_id, game_id, hours_played) VALUES (1, 'g2', -1)`, /Check constraint|Out of range/i);
   rejects(`INSERT INTO user_games (user_id, game_id, status) VALUES (1, 'g2', 'BOGUS')`, /Data truncated|Incorrect/i);
-  rejects(`INSERT INTO games (id, title, developer, publisher, release_year, format) VALUES ('x', 't', 'd', 'p', 2020, 'Atari')`, /Data truncated|Incorrect/i);
+  rejects(`INSERT INTO games (id, title, developer_id, publisher_id, release_year, format) VALUES ('x', 't', 1, 2, 2020, 'Atari')`, /Data truncated|Incorrect/i);
   rejects(`INSERT INTO user_games (user_id, game_id) VALUES (1, 'missing-game')`, /foreign key constraint/i);
 });
 

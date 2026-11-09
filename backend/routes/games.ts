@@ -1,4 +1,4 @@
-// GET /api/games — the catalog with genres and the computed game_stats columns.
+// GET /api/games — the catalog (game_catalog view: games + company names) with genres and game_stats.
 import { Router } from 'express';
 import { pool } from '../db.ts';
 import { toGame, type GameRow } from '../map.ts';
@@ -23,7 +23,7 @@ const GAMES_SQL = `
            WHERE gg.game_id = g.id) AS genres,
          COALESCE(s.average_score, 0) AS average_score,
          COALESCE(s.popularity, 0)    AS popularity
-    FROM games g
+    FROM game_catalog g
     LEFT JOIN game_stats s ON s.game_id = g.id
    ORDER BY g.title
 `;
