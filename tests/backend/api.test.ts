@@ -14,7 +14,7 @@ let skip: string | false = false;
 try {
   await pool.query('SELECT 1');
 } catch {
-  skip = 'MySQL no disponible (revisa backend/.env o levanta el contenedor)';
+  skip = 'MySQL unavailable (check backend/.env or start the container)';
 }
 
 before(async () => {
@@ -80,13 +80,13 @@ test('PATCH merges onto the stored row, so edits to different fields never overw
   const favorite = await patch(`/api/me/games/${gameId}`, { isFavorite: true });
   assert.equal(favorite.status, 200);
 
-  const res = await patch(`/api/me/games/${gameId}`, { status: 'PAUSED', notes: 'más tarde' });
+  const res = await patch(`/api/me/games/${gameId}`, { status: 'PAUSED', notes: 'later' });
   assert.equal(res.status, 200);
 
   const saved = (await res.json()) as UserGame;
   assert.equal(saved.isFavorite, true);
   assert.equal(saved.status, 'PAUSED');
-  assert.equal(saved.notes, 'más tarde');
+  assert.equal(saved.notes, 'later');
   assert.equal(saved.gameId, gameId);
   assert.notEqual(saved.updatedAt, '');
 });
@@ -139,7 +139,7 @@ test('a game without a row starts from the user_games column defaults', { skip }
 });
 
 test('PATCH rejects an unknown game with 404', { skip }, async () => {
-  const res = await patch('/api/me/games/no-existe', { status: 'CURRENT' });
+  const res = await patch('/api/me/games/does-not-exist', { status: 'CURRENT' });
   assert.equal(res.status, 404);
   assert.equal(typeof ((await res.json()) as { error: string }).error, 'string');
 });
@@ -156,9 +156,9 @@ test('PATCH rejects values the schema forbids with 400', { skip }, async () => {
 });
 
 test('unknown routes answer 404 with a JSON error', { skip }, async () => {
-  const res = await get('/api/no-existe');
+  const res = await get('/api/does-not-exist');
   assert.equal(res.status, 404);
-  assert.deepEqual(await res.json(), { error: 'Ruta no encontrada' });
+  assert.deepEqual(await res.json(), { error: 'Route not found' });
 });
 
 test('malformed JSON answers 400 instead of crashing the process', { skip }, async () => {
@@ -168,7 +168,7 @@ test('malformed JSON answers 400 instead of crashing the process', { skip }, asy
     body: '{',
   });
   assert.equal(res.status, 400);
-  assert.deepEqual(await res.json(), { error: 'JSON inválido' });
+  assert.deepEqual(await res.json(), { error: 'Invalid JSON' });
 });
 
 test('an empty body leaves the stored row untouched', { skip }, async () => {
@@ -188,28 +188,28 @@ test('server-owned fields in the body are ignored', { skip }, async () => {
   const res = await patch('/api/me/games/elden-ring', {
     gameId: 'hades-2',
     updatedAt: '1999-01-01T00:00:00.000Z',
-    notes: 'no me cambies el id',
+    notes: 'do not change my id',
   });
   assert.equal(res.status, 200);
 
   const saved = (await res.json()) as UserGame;
   assert.equal(saved.gameId, 'elden-ring');
   assert.notEqual(saved.updatedAt, '1999-01-01T00:00:00.000Z');
-  assert.equal(saved.notes, 'no me cambies el id');
+  assert.equal(saved.notes, 'do not change my id');
 });
 
 test('PATCH rejects wrong field types with 400', { skip }, async () => {
   const cases: Record<string, unknown>[] = [
     { notes: 42 },
     { isFavorite: 'yes' },
-    { lastPlayedAt: 'no-es-una-fecha' },
+    { lastPlayedAt: 'not-a-date' },
     { achievementsUnlocked: 1.5 },
     { status: 7 },
   ];
 
   for (const body of cases) {
     const res = await patch('/api/me/games/hades-2', body);
-    assert.equal(res.status, 400, `debió rechazar ${JSON.stringify(body)}`);
+    assert.equal(res.status, 400, `should have rejected ${JSON.stringify(body)}`);
     assert.equal(typeof ((await res.json()) as { error: string }).error, 'string');
   }
 });

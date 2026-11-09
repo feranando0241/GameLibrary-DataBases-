@@ -84,7 +84,7 @@ function sqlValue(key: WritableKey, value: unknown): SqlValue {
       return badRequest('lastPlayedAt must be an ISO 8601 date-time or null');
 
     default:
-      return badRequest(`campo no editable: ${String(key)}`);
+      return badRequest(`field is not editable: ${String(key)}`);
   }
 }
 
@@ -95,7 +95,7 @@ function badRequest(message: string): never {
 /** Only the fields present in the body change; `gameId` and `updatedAt` are ignored. */
 function readChanges(body: unknown): { column: string; value: SqlValue }[] {
   if (body === null || typeof body !== 'object' || Array.isArray(body)) {
-    throw new HttpError(400, 'el cuerpo debe ser un objeto JSON');
+    throw new HttpError(400, 'body must be a JSON object');
   }
 
   const record = body as Record<string, unknown>;
@@ -135,7 +135,7 @@ meGamesRouter.patch('/:gameId', async (req, res) => {
   const gameId = req.params.gameId;
 
   const [games] = await pool.query('SELECT id FROM games WHERE id = ?', [gameId]);
-  if ((games as unknown[]).length === 0) throw new HttpError(404, `juego no encontrado: ${gameId}`);
+  if ((games as unknown[]).length === 0) throw new HttpError(404, `game not found: ${gameId}`);
 
   const changes = readChanges(req.body);
 
@@ -157,6 +157,6 @@ meGamesRouter.patch('/:gameId', async (req, res) => {
   );
 
   const saved = await selectRow(gameId);
-  if (saved === null) throw new HttpError(500, 'la fila desapareció después de escribirla');
+  if (saved === null) throw new HttpError(500, 'row disappeared after it was written');
   res.json(saved);
 });

@@ -10,7 +10,7 @@ import { meGamesRouter } from './routes/me-games.ts';
 const CLIENT_ERRORS = new Set([1265, 1292, 1366, 1406, 3819]);
 
 const notFound: RequestHandler = (_req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
+  res.status(404).json({ error: 'Route not found' });
 };
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
@@ -21,7 +21,7 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
   const { errno, type } = err as { errno?: number; type?: string };
   if (type === 'entity.parse.failed') {
-    res.status(400).json({ error: 'JSON inválido' });
+    res.status(400).json({ error: 'Invalid JSON' });
     return;
   }
 
@@ -31,7 +31,7 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   console.error(err);
-  res.status(500).json({ error: 'Error interno del servidor' });
+  res.status(500).json({ error: 'Internal server error' });
 };
 
 export function createApp(): express.Express {
@@ -51,13 +51,13 @@ const entry = process.argv[1];
 if (entry !== undefined && import.meta.url === pathToFileURL(entry).href) {
   const port = Number(process.env.PORT ?? 3000);
   const server = createApp().listen(port, () => {
-    console.log(`Geekbond API escuchando en http://localhost:${port}`);
+    console.log(`Geekbond API listening on http://localhost:${port}`);
   });
 
   // Close the HTTP server and drain the MySQL pool before exiting, so a restart
   // never leaves connections or in-flight writes half-done.
   const shutdown = (signal: NodeJS.Signals): void => {
-    console.log(`\n${signal} recibido; cerrando el servidor…`);
+    console.log(`\n${signal} received; shutting down…`);
     server.close(() => {
       void pool.end().finally(() => process.exit(0));
     });

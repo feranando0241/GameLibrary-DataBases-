@@ -17,7 +17,7 @@ const realFetch = globalThis.fetch;
 try {
   await pool.query('SELECT 1');
 } catch {
-  skip = 'MySQL no disponible (revisa backend/.env o levanta el contenedor)';
+  skip = 'MySQL unavailable (check backend/.env or start the container)';
 }
 
 before(async () => {
@@ -73,5 +73,5 @@ test('API validation errors reach the caller as rejected promises', { skip }, as
 });
 
 test('an unknown game rejects with the API 404 message', { skip }, async () => {
-  await assert.rejects(saveUserGame('no-existe', { status: 'CURRENT' }), /juego no encontrado/);
+  await assert.rejects(saveUserGame('does-not-exist', { status: 'CURRENT' }), /game not found/);
 });
